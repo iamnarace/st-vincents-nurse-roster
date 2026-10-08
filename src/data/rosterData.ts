@@ -294,7 +294,7 @@ export const ROSTER_DAYS: DayInfo[] = [
 ];
 
 export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
-  // 1. Wife Profile - Richa Budhathoki (Priority #1)
+  // 1. Highlight Profile - Richa Budhathoki (Priority)
   {
     id: 'staff-richa-budhathoki',
     name: 'Richa Budhathoki',
@@ -302,7 +302,7 @@ export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
     fte: 0.8,
     section: 'RN',
     isFavorite: true,
-    notes: 'Wife Profile • Priority View',
+    notes: 'SPLIT NIGHT',
     shifts: {
       '2026-10-12': 'E',
       '2026-10-13': 'E',

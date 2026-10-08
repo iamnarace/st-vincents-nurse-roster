@@ -37,18 +37,16 @@ import {
 import { exportRosterToExcel } from './utils/excelParser';
 import { 
   RotateCcw, 
-  Heart, 
   Calendar, 
   TableProperties, 
   Info, 
   FileSpreadsheet,
-  Download,
-  Sparkles
+  Download
 } from 'lucide-react';
 
 const WIFE_STAFF_ID = 'staff-richa-budhathoki';
-const STORAGE_KEY = 'st_vincents_roster_data_v2';
-const REQUESTS_KEY = 'st_vincents_swap_requests_v2';
+const STORAGE_KEY = 'st_vincents_roster_data_v3';
+const REQUESTS_KEY = 'st_vincents_swap_requests_v3';
 
 export function App() {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(() => {
@@ -98,7 +96,7 @@ export function App() {
         originalShift: 'N',
         targetShift: 'OFF',
         status: 'pending',
-        notes: 'Requested Sunday shift coverage via WhatsApp',
+        notes: 'Requested Sunday night shift coverage via WhatsApp',
         timestamp: 'Today 19:30'
       }
     ];
@@ -212,7 +210,7 @@ export function App() {
 
       {/* Main Workspace */}
       <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6 flex-1">
-        {/* Sleek Staff Selector (Dropdown/Search with Richa highlighted) */}
+        {/* Sleek Staff Selector (Search Dropdown with Richa highlighted) */}
         <StaffSelector
           staffMembers={staffMembers}
           selectedStaffId={selectedStaffId}
@@ -253,12 +251,11 @@ export function App() {
           />
         )}
 
-        {/* Bottom Helper Bar */}
+        {/* Bottom Helper Bar (Clean minimal text) */}
         <div className="p-4 bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-            <span className="font-medium text-slate-600">
-              Personal Shift & Swap Companion • Made with love for Richa & Ward 9 North Nurses
+            <span className="font-semibold text-slate-600">
+              Ward 9 North Nurse Shift & Swap Companion
             </span>
           </div>
 
@@ -287,7 +284,7 @@ export function App() {
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Heart className="w-5 h-5 fill-current" />
+          <span className="text-base leading-none">❤️</span>
           <span>Richa</span>
         </button>
 

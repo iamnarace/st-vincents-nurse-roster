@@ -1,13 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, 
-  Heart, 
   User, 
   ChevronDown, 
   Check, 
-  Sparkles,
-  Shield,
-  Stethoscope,
   X
 } from 'lucide-react';
 import { StaffMember } from '../types/roster';
@@ -41,8 +37,8 @@ export const StaffSelector: React.FC<StaffSelectorProps> = ({
   }, []);
 
   const currentStaff = staffMembers.find((s) => s.id === selectedStaffId) || staffMembers[0];
-  const wifeStaff = staffMembers.find((s) => s.id === wifeStaffId);
-  const isWifeSelected = selectedStaffId === wifeStaffId;
+  const richaStaff = staffMembers.find((s) => s.id === wifeStaffId);
+  const isRichaSelected = selectedStaffId === wifeStaffId;
 
   // Filtered staff members for the search dropdown
   const filteredStaff = staffMembers.filter((s) => {
@@ -57,34 +53,25 @@ export const StaffSelector: React.FC<StaffSelectorProps> = ({
   };
 
   return (
-    <div className="bg-white/90 backdrop-blur-md rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-5 relative" ref={dropdownRef}>
+    <div className="bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-5 relative" ref={dropdownRef}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         
         {/* Left: Active Staff Info Card */}
         <div className="flex items-center gap-3.5">
           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base shadow-sm transition-transform ${
-            isWifeSelected
+            isRichaSelected
               ? 'bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-rose-500/25 ring-4 ring-rose-100 scale-105'
               : 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-blue-500/20'
           }`}>
-            {isWifeSelected ? (
-              <Heart className="w-6 h-6 fill-white text-white animate-pulse" />
-            ) : (
-              currentStaff.name.charAt(0)
-            )}
+            {isRichaSelected ? '❤️' : currentStaff.name.charAt(0)}
           </div>
 
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                {currentStaff.name}
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5">
+                <span>{currentStaff.name}</span>
+                {isRichaSelected && <span className="text-sm">❤️</span>}
               </h2>
-              {isWifeSelected && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-100 text-rose-700 border border-rose-200 shadow-2xs">
-                  <Sparkles className="w-3 h-3 text-rose-500" />
-                  Richa (Wife)
-                </span>
-              )}
             </div>
 
             <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
@@ -101,15 +88,14 @@ export const StaffSelector: React.FC<StaffSelectorProps> = ({
 
         {/* Right: Quick Switch to Richa + Search & Select Dropdown Trigger */}
         <div className="flex items-center gap-2.5 self-start sm:self-center w-full sm:w-auto">
-          {/* Quick 1-click Return to Richa if someone else is selected */}
-          {!isWifeSelected && wifeStaff && (
+          {/* Quick 1-click Return to Richa if another nurse is being viewed */}
+          {!isRichaSelected && richaStaff && (
             <button
               onClick={() => onSelectStaff(wifeStaffId)}
-              className="px-3.5 py-2 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs shrink-0"
-              title="Return to Richa Budhathoki's personal roster"
+              className="px-3.5 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs shrink-0"
+              title="Return to Richa Budhathoki's roster"
             >
-              <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />
-              <span>Richa's Roster</span>
+              <span>Richa Budhathoki ❤️</span>
             </button>
           )}
 
@@ -123,7 +109,7 @@ export const StaffSelector: React.FC<StaffSelectorProps> = ({
               <div className="flex items-center gap-2 truncate">
                 <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 <span className="truncate">
-                  {isOpen ? 'Search nurse...' : 'Change Nurse / View Colleague'}
+                  {isOpen ? 'Search nurse...' : 'Select Staff Member'}
                 </span>
               </div>
               <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
@@ -153,35 +139,30 @@ export const StaffSelector: React.FC<StaffSelectorProps> = ({
                   )}
                 </div>
 
-                {/* Pinned Top Card: Richa Budhathoki (Wife) */}
-                {wifeStaff && (!searchTerm || wifeStaff.name.toLowerCase().includes(searchTerm.toLowerCase())) && (
+                {/* Highlighted Profile at Top: Richa Budhathoki ❤️ */}
+                {richaStaff && (!searchTerm || richaStaff.name.toLowerCase().includes(searchTerm.toLowerCase())) && (
                   <div className="pt-1">
-                    <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider px-2 mb-1">
-                      Priority Profile
-                    </p>
                     <button
-                      onClick={() => handleSelect(wifeStaff.id)}
+                      onClick={() => handleSelect(richaStaff.id)}
                       className={`w-full p-2.5 rounded-xl border flex items-center justify-between transition ${
-                        selectedStaffId === wifeStaff.id
+                        selectedStaffId === richaStaff.id
                           ? 'bg-rose-50 border-rose-300 text-rose-900 shadow-2xs font-bold'
-                          : 'bg-rose-50/50 hover:bg-rose-50 border-rose-200/80 text-rose-800'
+                          : 'bg-rose-50/60 hover:bg-rose-100/70 border-rose-200 text-rose-900 font-semibold'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-lg bg-rose-500 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                          <Heart className="w-3.5 h-3.5 fill-white text-white" />
+                          ❤️
                         </div>
                         <div className="text-left">
-                          <div className="text-xs font-bold flex items-center gap-1.5">
-                            <span>{wifeStaff.name}</span>
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-200/80 text-rose-800">
-                              Wife
-                            </span>
+                          <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                            <span>{richaStaff.name}</span>
+                            <span>❤️</span>
                           </div>
-                          <span className="text-[10px] text-rose-600">{wifeStaff.role} • FTE {wifeStaff.fte}</span>
+                          <span className="text-[10px] text-slate-500">{richaStaff.role} • FTE {richaStaff.fte}</span>
                         </div>
                       </div>
-                      {selectedStaffId === wifeStaff.id && (
+                      {selectedStaffId === richaStaff.id && (
                         <Check className="w-4 h-4 text-rose-600 shrink-0" />
                       )}
                     </button>
@@ -189,9 +170,9 @@ export const StaffSelector: React.FC<StaffSelectorProps> = ({
                 )}
 
                 {/* Rest of Staff List */}
-                <div className="pt-1">
+                <div className="pt-1 border-t border-slate-100">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">
-                    Ward Colleagues ({filteredStaff.filter((s) => s.id !== wifeStaffId).length})
+                    Staff List ({filteredStaff.filter((s) => s.id !== wifeStaffId).length})
                   </p>
                   <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
                     {filteredStaff

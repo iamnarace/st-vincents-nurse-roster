@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  Heart, 
   Calendar, 
   TableProperties, 
   FileSpreadsheet, 
@@ -34,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        {/* Left: Branding */}
+        {/* Left: Hospital Info */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
             <CalendarCheck className="w-5 h-5 stroke-[2.2]" />
@@ -56,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Center / Right: Action Controls */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-          {/* Richa's Roster 1-click Button */}
+          {/* Richa ❤️ Quick Switch Button */}
           <button
             onClick={() => {
               onSelectStaff(wifeStaffId);
@@ -67,10 +66,9 @@ export const Header: React.FC<HeaderProps> = ({
                 ? 'bg-rose-500 text-white shadow-rose-500/20 ring-2 ring-rose-300'
                 : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
             }`}
-            title="Jump directly to Richa's personal schedule"
+            title="View Richa's personal roster"
           >
-            <Heart className="w-3.5 h-3.5 fill-current" />
-            <span>Richa's Roster</span>
+            <span>Richa Budhathoki ❤️</span>
           </button>
 
           {/* View Mode Toggle Switch */}
