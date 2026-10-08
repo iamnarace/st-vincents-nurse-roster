@@ -45,8 +45,8 @@ import {
 } from 'lucide-react';
 
 const WIFE_STAFF_ID = 'staff-richa-budhathoki';
-const STORAGE_KEY = 'st_vincents_roster_data_v3';
-const REQUESTS_KEY = 'st_vincents_swap_requests_v3';
+const STORAGE_KEY = 'st_vincents_roster_data_v4';
+const REQUESTS_KEY = 'st_vincents_swap_requests_v4';
 
 export function App() {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(() => {
@@ -200,7 +200,7 @@ export function App() {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        selectedStaffId={selectedStaffId}
+        selectedStaff={activeStaff}
         onSelectStaff={setSelectedStaffId}
         wifeStaffId={WIFE_STAFF_ID}
         onOpenLegend={() => setIsLegendOpen(true)}

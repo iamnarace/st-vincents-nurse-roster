@@ -5,16 +5,14 @@ import {
   Sun, 
   Sunset, 
   Moon, 
-  CalendarDays, 
   CheckCircle2, 
-  Sparkles, 
   Timer, 
   AlertTriangle, 
   ShieldCheck, 
   Palmtree, 
   Download, 
-  HeartHandshake,
-  CalendarCheck
+  CalendarCheck,
+  User
 } from 'lucide-react';
 import { StaffMember, DayInfo, ShiftCode } from '../types/roster';
 import { SHIFT_DEFINITIONS, ROSTER_DAYS } from '../data/rosterData';
@@ -90,7 +88,7 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
       };
     }
 
-    // 2. "Short Turnaround": Evening shift today followed by Morning shift tomorrow (only ~9.5 hrs rest)
+    // 2. "Short Turnaround": Evening shift today followed by Morning shift tomorrow
     if (['E', 'E1', 'EI', 'E10'].includes(currShift) && ['M', 'M1', 'MI', 'M10'].includes(nextShift)) {
       return {
         type: 'warning',
@@ -125,7 +123,34 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner: Upcoming Shift Countdown & Widgets */}
+      {/* Top Banner: Prominently Names the Nurse */}
+      <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-blue-50 text-blue-700">
+            <User className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-black text-slate-900">
+              {staff.name}'s Shift Schedule
+            </h3>
+            <p className="text-xs text-slate-500">
+              Role: <span className="font-semibold text-slate-700">{staff.role}</span> • Ward 9 North • Oct 12 – Nov 08 2026
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownloadCalendar}
+            className="text-xs font-bold text-slate-700 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 transition border border-slate-200"
+          >
+            <Download className="w-3.5 h-3.5 text-blue-600" />
+            <span>Export {staff.name}'s Calendar (.ics)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Hero: Upcoming Shift Countdown & Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Next Shift Countdown Hero Card */}
         <div className="lg:col-span-2 bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl shadow-blue-900/15 relative overflow-hidden flex flex-col justify-between">
@@ -135,7 +160,7 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="px-3 py-1 rounded-full bg-blue-500/30 border border-blue-400/30 text-blue-100 text-xs font-semibold flex items-center gap-1.5 backdrop-blur-md">
                 <Timer className="w-3.5 h-3.5 text-blue-200" />
-                Next Upcoming Shift
+                {staff.name}'s Next Upcoming Shift
               </span>
               <span className="text-blue-200 text-xs font-medium">
                 {firstActiveShiftDay ? `${firstActiveShiftDay.fullDayName}, Oct ${firstActiveShiftDay.dayNumber} 2026` : 'No upcoming shifts'}
@@ -159,8 +184,8 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
 
           <div className="mt-5 pt-4 border-t border-white/15 flex flex-wrap items-center justify-between gap-3 relative z-10">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-blue-200">Ward:</span>
-              <span className="text-xs font-bold text-white">9 North / GSS</span>
+              <span className="text-xs text-blue-200">Nurse:</span>
+              <span className="text-xs font-bold text-white">{staff.name}</span>
               <span className="text-blue-300">•</span>
               <span className="text-xs text-blue-200">Handover: 15 mins prior</span>
             </div>
@@ -172,7 +197,7 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
                 title="Download .ics file to import into Google or Apple Calendar"
               >
                 <CalendarCheck className="w-3.5 h-3.5 text-blue-200" />
-                <span>{copiedSync ? 'Exported!' : 'Sync to Calendar (.ics)'}</span>
+                <span>{copiedSync ? 'Exported!' : 'Sync to Calendar'}</span>
               </button>
 
               {firstActiveShiftDay && (
@@ -209,7 +234,7 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
           {/* Shift Counts */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-              Roster Summary
+              4-Week Shift Distribution
             </h4>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex items-center gap-2">
@@ -247,7 +272,7 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
         </div>
       </div>
 
-      {/* Week Selector Filters & Controls */}
+      {/* Week Selector Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-xs">
         <div className="flex items-center gap-1.5 overflow-x-auto py-1">
           <button
@@ -275,14 +300,8 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleDownloadCalendar}
-            className="text-xs font-bold text-slate-700 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 transition border border-slate-200"
-          >
-            <Download className="w-3.5 h-3.5 text-blue-600" />
-            <span>Download Calendar (.ics)</span>
-          </button>
+        <div className="text-xs text-slate-500 font-medium">
+          Showing <b>{staff.name}'s</b> schedule
         </div>
       </div>
 
