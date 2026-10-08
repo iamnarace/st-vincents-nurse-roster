@@ -1,0 +1,17 @@
+{
+  "name": "St. V Hospital Roster",
+  "short_name": "Roster 9N",
+  "description": "Ward 9 North Nurse Shift Schedule & Swap Portal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

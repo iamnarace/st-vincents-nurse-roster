@@ -35,18 +35,19 @@ import {
   SwapRequest 
 } from './types/roster';
 import { exportRosterToExcel } from './utils/excelParser';
+import { downloadIcsFile } from './utils/calendarSync';
 import { 
   RotateCcw, 
   Calendar, 
   TableProperties, 
-  Info, 
-  FileSpreadsheet,
-  Download
+  CalendarCheck,
+  Home,
+  Users
 } from 'lucide-react';
 
 const WIFE_STAFF_ID = 'staff-richa-budhathoki';
-const STORAGE_KEY = 'st_vincents_roster_data_v4';
-const REQUESTS_KEY = 'st_vincents_swap_requests_v4';
+const STORAGE_KEY = 'st_vincents_roster_data_v5';
+const REQUESTS_KEY = 'st_vincents_swap_requests_v5';
 
 export function App() {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(() => {
@@ -87,19 +88,7 @@ export function App() {
         console.error('Failed to parse cached requests', e);
       }
     }
-    return [
-      {
-        id: 'req-demo-1',
-        fromStaffId: WIFE_STAFF_ID,
-        toStaffId: 'staff-sushmita-rana-magar',
-        dateStr: '2026-10-18',
-        originalShift: 'N',
-        targetShift: 'OFF',
-        status: 'pending',
-        notes: 'Requested Sunday night shift coverage via WhatsApp',
-        timestamp: 'Today 19:30'
-      }
-    ];
+    return [];
   });
 
   // Sync to local storage
@@ -187,6 +176,10 @@ export function App() {
     exportRosterToExcel(staffMembers);
   };
 
+  const handleSyncCalendar = () => {
+    downloadIcsFile(activeStaff);
+  };
+
   const handleResetRoster = () => {
     if (window.confirm('Reset roster back to official schedule?')) {
       setStaffMembers(INITIAL_STAFF_MEMBERS);
@@ -195,7 +188,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pb-20 md:pb-6">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pb-24 md:pb-6">
       {/* Top Header */}
       <Header
         activeTab={activeTab}
@@ -209,7 +202,7 @@ export function App() {
       />
 
       {/* Main Workspace */}
-      <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6 flex-1">
+      <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-5 flex-1">
         {/* Sleek Staff Selector (Search Dropdown with Richa highlighted) */}
         <StaffSelector
           staffMembers={staffMembers}
@@ -231,6 +224,7 @@ export function App() {
             <PersonalCalendarView
               staff={activeStaff}
               onInitiateSwap={(dayInfo, shiftCode) => handleOpenSwapModal(dayInfo, shiftCode)}
+              onSyncCalendar={handleSyncCalendar}
             />
           ) : (
             <div className="p-8 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
@@ -251,79 +245,55 @@ export function App() {
           />
         )}
 
-        {/* Bottom Helper Bar (Clean minimal text) */}
+        {/* Bottom Helper Bar */}
         <div className="p-4 bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-600">
-              Ward 9 North Nurse Shift & Swap Companion
-            </span>
-          </div>
+          <span className="font-semibold text-slate-600">
+            St. V Hospital • Ward 9 North Roster & Shift Swap Companion
+          </span>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleResetRoster}
-              className="text-slate-400 hover:text-slate-700 flex items-center gap-1 font-medium transition"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Schedule</span>
-            </button>
-          </div>
+          <button
+            onClick={handleResetRoster}
+            className="text-slate-400 hover:text-slate-700 flex items-center gap-1 font-medium transition self-start sm:self-center"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset Schedule</span>
+          </button>
         </div>
       </main>
 
-      {/* Mobile Sticky Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-3 py-2 flex items-center justify-around shadow-lg">
-        <button
-          onClick={() => {
-            setSelectedStaffId(WIFE_STAFF_ID);
-            setActiveTab('personal');
-          }}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition ${
-            selectedStaffId === WIFE_STAFF_ID && activeTab === 'personal'
-              ? 'text-rose-600'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <span className="text-base leading-none">❤️</span>
-          <span>Richa</span>
-        </button>
-
+      {/* Mobile Sticky Bottom Navigation Bar (Matching Wireframe) */}
+      {/* [ 🏠 My Roster ] | [ 👥 Ward Directory ] | [ 📅 Sync Calendar ] */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-40 px-4 py-2.5 flex items-center justify-around shadow-xl">
         <button
           onClick={() => setActiveTab('personal')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition ${
-            activeTab === 'personal' && selectedStaffId !== WIFE_STAFF_ID
-              ? 'text-blue-600'
+          className={`flex flex-col items-center gap-1 text-xs font-bold transition ${
+            activeTab === 'personal'
+              ? 'text-blue-600 scale-105'
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          <Calendar className="w-5 h-5" />
-          <span>Calendar</span>
+          <Home className="w-5 h-5" />
+          <span>🏠 My Roster</span>
         </button>
 
         <button
           onClick={() => setActiveTab('master')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition ${
-            activeTab === 'master' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800'
+          className={`flex flex-col items-center gap-1 text-xs font-bold transition ${
+            activeTab === 'master'
+              ? 'text-blue-600 scale-105'
+              : 'text-slate-500 hover:text-slate-800'
           }`}
         >
-          <TableProperties className="w-5 h-5" />
-          <span>Ward Master</span>
+          <Users className="w-5 h-5" />
+          <span>👥 Ward Directory</span>
         </button>
 
         <button
-          onClick={() => setIsLegendOpen(true)}
-          className="flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 transition"
+          onClick={handleSyncCalendar}
+          className="flex flex-col items-center gap-1 text-xs font-semibold text-slate-600 hover:text-blue-600 transition"
         >
-          <Info className="w-5 h-5" />
-          <span>Legend</span>
-        </button>
-
-        <button
-          onClick={() => setIsUploadOpen(true)}
-          className="flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 transition"
-        >
-          <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
-          <span>Upload</span>
+          <CalendarCheck className="w-5 h-5 text-sky-600" />
+          <span>📅 Sync Calendar</span>
         </button>
       </nav>
 
