@@ -46,8 +46,8 @@ import {
 } from 'lucide-react';
 
 const WIFE_STAFF_ID = 'staff-richa-budhathoki';
-const STORAGE_KEY = 'st_vincents_roster_data_v5';
-const REQUESTS_KEY = 'st_vincents_swap_requests_v5';
+const STORAGE_KEY = 'st_vincents_roster_data_v6';
+const REQUESTS_KEY = 'st_vincents_swap_requests_v6';
 
 export function App() {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(() => {

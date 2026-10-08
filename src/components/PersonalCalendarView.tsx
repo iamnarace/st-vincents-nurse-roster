@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Clock, 
   ArrowLeftRight, 
@@ -35,11 +35,184 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
   const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
   const [copiedSync, setCopiedSync] = useState(false);
 
+  // Live current time state updating every 30 seconds
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format YYYY-MM-DD
+  const formatDateKey = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  const todayStr = formatDateKey(currentTime);
+
+  // Helper to get yesterday and tomorrow strings
+  const yesterday = new Date(currentTime);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = formatDateKey(yesterday);
+
+  const tomorrow = new Date(currentTime);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = formatDateKey(tomorrow);
+
   // Dynamic Greeting based on current hour
-  const currentHour = new Date().getHours();
+  const currentHour = currentTime.getHours();
   let greeting = 'Good morning!';
   if (currentHour >= 12 && currentHour < 17) greeting = 'Good afternoon!';
   else if (currentHour >= 17) greeting = 'Good evening!';
+
+  // Helper to parse start and end timestamps for a shift
+  const getShiftTimestamps = (dateStr: string, code: ShiftCode) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    if (!['M', 'M1', 'MI', 'M10', 'E', 'E1', 'EI', 'E6', 'E10', 'N', 'N1', 'NI', 'D', 'SD'].includes(code)) {
+      return null;
+    }
+    let startHour = 7, startMin = 0, endHour = 15, endMin = 30;
+    let endDayOffset = 0;
+
+    if (['M', 'M1', 'MI'].includes(code)) {
+      startHour = 7; startMin = 0; endHour = 15; endMin = 30;
+    } else if (code === 'M10') {
+      startHour = 7; startMin = 0; endHour = 17; endMin = 30;
+    } else if (['E', 'E1', 'EI'].includes(code)) {
+      startHour = 13; startMin = 0; endHour = 21; endMin = 30;
+    } else if (code === 'E6') {
+      startHour = 15; startMin = 30; endHour = 21; endMin = 30;
+    } else if (code === 'E10') {
+      startHour = 11; startMin = 30; endHour = 22; endMin = 0;
+    } else if (['N', 'N1', 'NI'].includes(code)) {
+      startHour = 21; startMin = 0; endHour = 7; endMin = 30;
+      endDayOffset = 1;
+    } else if (['D', 'SD'].includes(code)) {
+      startHour = 8; startMin = 0; endHour = 16; endMin = 30;
+    }
+
+    const start = new Date(y, m - 1, d, startHour, startMin, 0);
+    const end = new Date(y, m - 1, d + endDayOffset, endHour, endMin, 0);
+    return { start, end };
+  };
+
+  // Helper to format remaining time nicely
+  const formatTimeDiff = (ms: number) => {
+    if (ms <= 0) return '0 mins';
+    const totalMins = Math.floor(ms / (1000 * 60));
+    const hours = Math.floor(totalMins / 60);
+    const mins = totalMins % 60;
+    const days = Math.floor(hours / 24);
+    const remHours = hours % 24;
+
+    if (days > 0) {
+      return `${days}d ${remHours}h`;
+    }
+    if (hours > 0) {
+      return `${hours} hr${hours > 1 ? 's' : ''} ${mins} min${mins > 1 ? 's' : ''}`;
+    }
+    return `${mins} min${mins > 1 ? 's' : ''}`;
+  };
+
+  // Evaluate Live Shift Status for selected staff
+  const todayShiftCode = (staff.shifts[todayStr] || 'OFF') as ShiftCode;
+  const todayShiftDef = SHIFT_DEFINITIONS[todayShiftCode] || SHIFT_DEFINITIONS.OFF;
+  const todayTimes = getShiftTimestamps(todayStr, todayShiftCode);
+
+  // Check if staff is still finishing an overnight Night shift from yesterday
+  const yesterdayCode = (staff.shifts[yesterdayStr] || 'OFF') as ShiftCode;
+  const yesterdayTimes = getShiftTimestamps(yesterdayStr, yesterdayCode);
+  const isCarryingOverNightDuty = 
+    yesterdayTimes && 
+    ['N', 'N1', 'NI'].includes(yesterdayCode) && 
+    currentTime < yesterdayTimes.end;
+
+  let currentDutyStatus: 'on_duty' | 'upcoming_today' | 'completed_today' | 'off_duty' = 'off_duty';
+  let activeShiftDetails: {
+    label: string;
+    code: ShiftCode;
+    time: string;
+    category: string;
+    countdownText: string;
+    subNote: string;
+    completedAt?: string;
+  } | null = null;
+
+  if (isCarryingOverNightDuty && yesterdayTimes) {
+    // Currently on night shift from yesterday
+    currentDutyStatus = 'on_duty';
+    activeShiftDetails = {
+      label: 'Night Shift (Overnight)',
+      code: yesterdayCode,
+      time: '21:00 - 07:30',
+      category: 'Night',
+      countdownText: `Finishes in: ${formatTimeDiff(yesterdayTimes.end.getTime() - currentTime.getTime())}`,
+      subNote: 'Handover at 07:30 morning'
+    };
+  } else if (todayTimes) {
+    if (currentTime >= todayTimes.start && currentTime < todayTimes.end) {
+      // Currently on duty today
+      currentDutyStatus = 'on_duty';
+      activeShiftDetails = {
+        label: todayShiftDef.label,
+        code: todayShiftCode,
+        time: todayShiftDef.time,
+        category: todayShiftDef.category,
+        countdownText: `Finishes in: ${formatTimeDiff(todayTimes.end.getTime() - currentTime.getTime())}`,
+        subNote: `Shift ends at ${todayTimes.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      };
+    } else if (currentTime < todayTimes.start) {
+      // Shift is upcoming today
+      currentDutyStatus = 'upcoming_today';
+      activeShiftDetails = {
+        label: todayShiftDef.label,
+        code: todayShiftCode,
+        time: todayShiftDef.time,
+        category: todayShiftDef.category,
+        countdownText: `Starts in: ${formatTimeDiff(todayTimes.start.getTime() - currentTime.getTime())}`,
+        subNote: `Handover at ${todayTimes.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} today`
+      };
+    } else {
+      // Shift completed earlier today!
+      currentDutyStatus = 'completed_today';
+      activeShiftDetails = {
+        label: todayShiftDef.label,
+        code: todayShiftCode,
+        time: todayShiftDef.time,
+        category: todayShiftDef.category,
+        countdownText: `Shift completed today at ${todayTimes.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        subNote: 'Great job! Rest well today.',
+        completedAt: todayTimes.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+    }
+  } else {
+    // Off, ADO, AL today
+    currentDutyStatus = 'off_duty';
+  }
+
+  // Find next upcoming active shift (from tomorrow onwards, or today if upcoming)
+  let nextShiftDay: DayInfo | null = null;
+  let nextShiftCode: ShiftCode = 'M';
+  let nextShiftStart: Date | null = null;
+
+  for (let i = 0; i < ROSTER_DAYS.length; i++) {
+    const day = ROSTER_DAYS[i];
+    const code = (staff.shifts[day.dateStr] || 'OFF') as ShiftCode;
+    const times = getShiftTimestamps(day.dateStr, code);
+    if (!times) continue;
+
+    if (times.start.getTime() > currentTime.getTime()) {
+      nextShiftDay = day;
+      nextShiftCode = code;
+      nextShiftStart = times.start;
+      break;
+    }
+  }
+
+  const nextShiftDef = SHIFT_DEFINITIONS[nextShiftCode] || SHIFT_DEFINITIONS.M;
+  const isNextShiftTomorrow = nextShiftDay?.dateStr === tomorrowStr;
 
   // Statistics calculation
   let morningCount = 0;
@@ -68,9 +241,10 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
 
   for (let i = 0; i < ROSTER_DAYS.length; i++) {
     const day = ROSTER_DAYS[i];
+    if (day.dateStr < todayStr) continue;
     const code = staff.shifts[day.dateStr] || 'OFF';
     if (['ADO', 'ADO4', 'ADO6', 'ADO10', 'AL', 'AL6'].includes(code)) {
-      nextOffOrLeaveDate = `Oct ${day.dayNumber}`;
+      nextOffOrLeaveDate = `${day.fullDayName}, Oct ${day.dayNumber}`;
       nextOffOrLeaveType = code.startsWith('AL') ? 'Annual Leave' : 'ADO Day';
       break;
     }
@@ -78,15 +252,6 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
       shiftsUntilNextOffOrLeave++;
     }
   }
-
-  // Find next upcoming active shift
-  const firstActiveShiftDay = ROSTER_DAYS.find((d) => {
-    const c = staff.shifts[d.dateStr];
-    return c && !['OFF', 'ADO', 'ADO4', 'ADO6', 'ADO10', 'AL', 'AL6'].includes(c);
-  });
-
-  const nextShiftCode = firstActiveShiftDay ? staff.shifts[firstActiveShiftDay.dateStr] : 'M';
-  const nextShiftDef = SHIFT_DEFINITIONS[nextShiftCode || 'M'];
 
   // Get contextual note for a shift
   const getShiftNote = (shiftCode: ShiftCode, dayIndex: number) => {
@@ -165,47 +330,121 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
 
   return (
     <div className="space-y-5">
-      {/* 1. Welcome & Status Banner (Matching Mobile Screen Wireframe) */}
+      {/* 1. Real-Time Dynamic Status & Welcome Banner */}
       <div className="bg-gradient-to-br from-blue-700 via-sky-800 to-indigo-900 rounded-3xl p-5 sm:p-7 text-white shadow-xl shadow-blue-900/15 relative overflow-hidden">
         <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-60 h-60 bg-white/10 rounded-full pointer-events-none blur-2xl" />
         
-        <div className="relative z-10 space-y-3">
+        <div className="relative z-10 space-y-3.5">
           <div className="flex items-center justify-between">
             <h3 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2">
               <span>{greeting}</span>
             </h3>
             <span className="px-3 py-1 rounded-full bg-white/15 text-blue-100 text-xs font-semibold backdrop-blur-md border border-white/20">
-              Ward 9 North
+              Ward 9 North / GSS
             </span>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 space-y-2">
-            <div className="flex items-center gap-2 text-sm sm:text-base font-bold">
-              <span>{getShiftDot(nextShiftDef.category)}</span>
-              <span>Upcoming Shift:</span>
-              <span className="underline decoration-sky-300 underline-offset-2">
-                {nextShiftDef.label} ({nextShiftCode})
-              </span>
-              <span className="text-xs font-normal text-blue-200">
-                ({nextShiftDef.time})
-              </span>
+          {/* Today's Live Shift Condition */}
+          {currentDutyStatus === 'completed_today' && (
+            <div className="bg-emerald-500/20 backdrop-blur-md rounded-2xl p-3.5 border border-emerald-300/30 flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-300 shrink-0" />
+              <div className="text-xs sm:text-sm">
+                <span className="font-bold text-emerald-200">
+                  ✅ {activeShiftDetails?.label} finished today at {activeShiftDetails?.completedAt}
+                </span>
+                <p className="text-emerald-100/90 text-xs mt-0.5">
+                  Shift completed • Enjoy your restful evening!
+                </p>
+              </div>
             </div>
+          )}
 
-            <div className="flex items-center gap-2 text-xs sm:text-sm text-sky-200 font-medium pt-1 border-t border-white/10">
-              <Timer className="w-4 h-4 text-sky-300 shrink-0" />
-              <span>Shift starts in: <b className="text-white font-bold">1 hr 10 mins</b></span>
-              <span className="text-white/40">•</span>
-              <span className="text-blue-100 text-xs">
-                {firstActiveShiftDay ? `${firstActiveShiftDay.fullDayName}, Oct ${firstActiveShiftDay.dayNumber}` : 'Scheduled'}
+          {currentDutyStatus === 'on_duty' && activeShiftDetails && (
+            <div className="bg-amber-500/25 backdrop-blur-md rounded-2xl p-3.5 border border-amber-300/40 flex items-center gap-3 animate-pulse">
+              <span className="text-xl">⚡</span>
+              <div className="text-xs sm:text-sm">
+                <span className="font-black text-amber-200">
+                  Currently On Duty: {activeShiftDetails.label} ({activeShiftDetails.time})
+                </span>
+                <p className="text-amber-100 text-xs mt-0.5 font-medium">
+                  ⏱️ {activeShiftDetails.countdownText}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {currentDutyStatus === 'upcoming_today' && activeShiftDetails && (
+            <div className="bg-white/15 backdrop-blur-md rounded-2xl p-3.5 border border-white/20 space-y-1.5">
+              <div className="flex items-center gap-2 text-sm sm:text-base font-bold">
+                <span>{getShiftDot(activeShiftDetails.category)}</span>
+                <span>Today's Shift:</span>
+                <span className="underline decoration-sky-300 underline-offset-2">
+                  {activeShiftDetails.label} ({activeShiftDetails.code})
+                </span>
+                <span className="text-xs font-normal text-blue-200">
+                  ({activeShiftDetails.time})
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-sky-200 font-medium">
+                <Timer className="w-4 h-4 text-sky-300 shrink-0" />
+                <span>Shift {activeShiftDetails.countdownText}</span>
+                <span className="text-white/40">•</span>
+                <span className="text-blue-100 text-xs">{activeShiftDetails.subNote}</span>
+              </div>
+            </div>
+          )}
+
+          {currentDutyStatus === 'off_duty' && (
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/15 flex items-center gap-2.5 text-xs text-sky-100">
+              <span className="text-base">🛋️</span>
+              <span>
+                <b>Off Duty Today:</b> Scheduled Rest Day. Enjoy your time off!
               </span>
             </div>
-          </div>
+          )}
+
+          {/* Next Upcoming Shift Preview (Essential when today is completed or off) */}
+          {nextShiftDay && nextShiftStart && (
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/15 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-white">
+                  <span>{getShiftDot(nextShiftDef.category)}</span>
+                  <span>Next Shift:</span>
+                  <span className="text-sky-200 underline decoration-sky-300">
+                    {isNextShiftTomorrow ? 'Tomorrow' : `${nextShiftDay.fullDayName}, Oct ${nextShiftDay.dayNumber}`}
+                  </span>
+                  <span>•</span>
+                  <span>{nextShiftDef.label} ({nextShiftCode})</span>
+                </div>
+                <span className="text-[11px] font-mono text-blue-200 bg-white/10 px-2 py-0.5 rounded-lg border border-white/10">
+                  {nextShiftDef.time}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-sky-200 font-medium pt-1 border-t border-white/10">
+                <Timer className="w-4 h-4 text-sky-300 shrink-0" />
+                <span>
+                  Starts in: <b className="text-white font-extrabold">{formatTimeDiff(nextShiftStart.getTime() - currentTime.getTime())}</b>
+                </span>
+                <span className="text-white/40">•</span>
+                <span className="text-blue-100 text-xs">
+                  {isNextShiftTomorrow ? 'Handover starts tomorrow' : `Starts ${nextShiftDay.fullDayName}`}
+                </span>
+              </div>
+
+              {['N', 'N1', 'NI'].includes(nextShiftCode) && (
+                <div className="text-[11px] text-purple-200 bg-purple-500/20 px-2.5 py-1 rounded-xl border border-purple-300/20 font-medium">
+                  ⚠️ Night shift ahead. Protect your sleep schedule today.
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Action Row */}
         <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-xs relative z-10">
           <span className="text-blue-200">
-            Rostered to: <b className="text-white">{staff.name}</b>
+            Roster for: <b className="text-white">{staff.name}</b>
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -294,21 +533,56 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
               const isWorkDuty = !['OFF', 'ADO', 'ADO4', 'ADO6', 'ADO10', 'AL', 'AL6'].includes(shiftCode);
               const dot = getShiftDot(meta.category);
 
+              const isToday = day.dateStr === todayStr;
+              const isTomorrow = day.dateStr === tomorrowStr;
+              const monthLabel = day.dateStr.startsWith('2026-11') ? 'Nov' : 'Oct';
+              const isTodayCompleted = isToday && currentDutyStatus === 'completed_today';
+              const isTodayOnDuty = isToday && currentDutyStatus === 'on_duty';
+
               return (
                 <div
                   key={day.dateStr}
                   className={`p-4 rounded-3xl border transition-all duration-200 bg-white ${
-                    day.isWeekend ? 'ring-1 ring-slate-200/90' : ''
-                  } border-slate-200/90 shadow-2xs hover:shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3`}
+                    isToday 
+                      ? 'ring-2 ring-blue-500 shadow-md bg-blue-50/30' 
+                      : day.isWeekend 
+                        ? 'ring-1 ring-slate-200/90 shadow-2xs' 
+                        : 'shadow-2xs'
+                  } border-slate-200/90 hover:shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3`}
                 >
                   <div className="space-y-1.5">
                     {/* Date Header */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-base leading-none">📅</span>
                       <span className="font-extrabold text-sm sm:text-base text-slate-900">
-                        {day.fullDayName}, Oct {day.dayNumber}
+                        {day.fullDayName}, {monthLabel} {day.dayNumber}
                       </span>
-                      {day.isWeekend && (
+
+                      {isToday && (
+                        <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-blue-600 text-white shadow-2xs animate-pulse">
+                          ⭐ TODAY
+                        </span>
+                      )}
+
+                      {isTomorrow && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                          TOMORROW
+                        </span>
+                      )}
+
+                      {isTodayCompleted && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          ✅ Shift Completed
+                        </span>
+                      )}
+
+                      {isTodayOnDuty && (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                          ⚡ Currently Working
+                        </span>
+                      )}
+
+                      {day.isWeekend && !isToday && !isTomorrow && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
                           Weekend
                         </span>
@@ -384,8 +658,13 @@ export const PersonalCalendarView: React.FC<PersonalCalendarViewProps> = ({
                         {day.dayName}
                       </span>
                       <span className="text-xs font-semibold text-slate-500">
-                        Oct {day.dayNumber}
+                        {day.dateStr.startsWith('2026-11') ? 'Nov' : 'Oct'} {day.dayNumber}
                       </span>
+                      {day.dateStr === todayStr && (
+                        <span className="text-[9px] font-black bg-blue-600 text-white px-1.5 py-0.2 rounded-full">
+                          TODAY
+                        </span>
+                      )}
                     </div>
                   </div>
 

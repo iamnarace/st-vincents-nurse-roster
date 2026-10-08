@@ -68,6 +68,18 @@ export interface SwapCandidate {
   isEligible: boolean;
   reason: string;
   restHoursOK: boolean;
+  category: 'available_off' | 'fatigue_conflict' | 'mutual_duty' | 'on_leave' | 'same_shift';
+  prevShift?: ShiftCode;
+  nextShift?: ShiftCode;
+}
+
+export interface SwapAnalysisSummary {
+  totalOff: number;
+  canDoShift: number;
+  fatigueConflictCount: number;
+  onLeaveCount: number;
+  mutualDutyCount: number;
+  candidates: SwapCandidate[];
 }
 
 export interface SwapRequest {
