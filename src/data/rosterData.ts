@@ -294,7 +294,48 @@ export const ROSTER_DAYS: DayInfo[] = [
 ];
 
 export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
-  // 1. Management
+  // 1. Wife Profile - Richa Budhathoki (Priority #1)
+  {
+    id: 'staff-richa-budhathoki',
+    name: 'Richa Budhathoki',
+    role: 'RN',
+    fte: 0.8,
+    section: 'RN',
+    isFavorite: true,
+    notes: 'Wife Profile • Priority View',
+    shifts: {
+      '2026-10-12': 'E',
+      '2026-10-13': 'E',
+      '2026-10-14': 'OFF',
+      '2026-10-15': 'M',
+      '2026-10-16': 'M',
+      '2026-10-17': 'N',
+      '2026-10-18': 'N',
+      '2026-10-19': 'OFF',
+      '2026-10-20': 'E',
+      '2026-10-21': 'E',
+      '2026-10-22': 'OFF',
+      '2026-10-23': 'E',
+      '2026-10-24': 'OFF',
+      '2026-10-25': 'OFF',
+      '2026-10-26': 'E',
+      '2026-10-27': 'E',
+      '2026-10-28': 'E',
+      '2026-10-29': 'OFF',
+      '2026-10-30': 'ADO',
+      '2026-10-31': 'OFF',
+      '2026-11-01': 'OFF',
+      '2026-11-02': 'OFF',
+      '2026-11-03': 'N',
+      '2026-11-04': 'N',
+      '2026-11-05': 'OFF',
+      '2026-11-06': 'OFF',
+      '2026-11-07': 'OFF',
+      '2026-11-08': 'OFF'
+    }
+  },
+
+  // 2. Management
   {
     id: 'staff-helen-white',
     name: 'Helen White',
@@ -348,15 +389,13 @@ export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
     }
   },
 
-  // 2. RN In Charge
+  // 3. RN In Charge
   {
     id: 'staff-barsha-bhattarai',
     name: 'Barsha Bhattarai',
     role: 'RN',
     fte: 1.0,
     section: 'RN In charge',
-    isFavorite: true,
-    notes: 'Wife Profile • Priority View',
     shifts: {
       '2026-10-12': 'EI', '2026-10-13': 'EI', '2026-10-14': 'M', '2026-10-15': 'M', '2026-10-16': 'M1',
       '2026-10-17': 'MI', '2026-10-18': 'E', '2026-10-20': 'ADO', '2026-10-21': 'M', '2026-10-22': 'M',
@@ -501,7 +540,7 @@ export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
     }
   },
 
-  // 3. RN (Staff Nurses)
+  // 4. RN (Staff Nurses)
   {
     id: 'staff-nisha-bohara',
     name: 'Nisha Bohara',
@@ -514,20 +553,6 @@ export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
       '2026-10-18': 'N', '2026-10-20': 'E', '2026-10-21': 'E', '2026-10-23': 'E', '2026-10-24': 'E',
       '2026-10-26': 'E', '2026-10-27': 'E', '2026-10-28': 'N', '2026-10-30': 'E6', '2026-10-31': 'E',
       '2026-11-02': 'ADO', '2026-11-04': 'N', '2026-11-05': 'N'
-    }
-  },
-  {
-    id: 'staff-richa-budhathoki',
-    name: 'Richa Budhathoki',
-    role: 'RN',
-    fte: 0.8,
-    section: 'RN',
-    notes: 'SPLIT NIGHT',
-    shifts: {
-      '2026-10-12': 'E', '2026-10-13': 'E', '2026-10-15': 'M', '2026-10-16': 'M', '2026-10-17': 'N',
-      '2026-10-18': 'N', '2026-10-20': 'E', '2026-10-21': 'E', '2026-10-23': 'E',
-      '2026-10-26': 'E', '2026-10-27': 'E', '2026-10-28': 'E', '2026-10-30': 'ADO',
-      '2026-11-03': 'N', '2026-11-04': 'N'
     }
   },
   {
@@ -626,7 +651,7 @@ export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
     }
   },
 
-  // 4. TSPRN / Transition Program
+  // 5. TSPRN / Transition Program
   {
     id: 'staff-matilda-aller',
     name: 'Matilda Aller',
@@ -670,21 +695,6 @@ export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
     }
   },
 
-  // 5. Pathways to Practice RN
-  {
-    id: 'staff-nicole-ong',
-    name: 'Nicole Ong',
-    role: 'RN',
-    fte: 1.0,
-    section: 'Pathways to Practice RN',
-    shifts: {
-      '2026-10-12': 'M', '2026-10-13': 'M', '2026-10-14': 'M', '2026-10-15': 'M',
-      '2026-10-18': 'SD', '2026-10-19': 'E', '2026-10-20': 'E', '2026-10-22': 'ADO',
-      '2026-10-25': 'E', '2026-10-26': 'E', '2026-10-27': 'E',
-      '2026-11-02': 'N', '2026-11-03': 'N', '2026-11-04': 'N'
-    }
-  },
-
   // 6. EENs
   {
     id: 'staff-shine-richardson',
@@ -719,7 +729,7 @@ export const WARD_INFO = {
   hospitalName: "St. Vincent's Public Hospital",
   wardName: '9 North / GSS',
   periodTitle: '12th October - 8th November 2026',
-  takeDownNotice: 'To be taken down 2nd September / 14th September',
+  takeDownNotice: 'Ward 9 North Roster',
   totalBeds: 28,
   nurseLeadContact: 'Helen White (NUM) - Ext 4902'
 };

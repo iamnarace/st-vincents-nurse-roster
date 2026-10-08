@@ -37,18 +37,18 @@ import {
 import { exportRosterToExcel } from './utils/excelParser';
 import { 
   RotateCcw, 
-  ShieldCheck, 
   Heart, 
   Calendar, 
   TableProperties, 
   Info, 
   FileSpreadsheet,
-  Download
+  Download,
+  Sparkles
 } from 'lucide-react';
 
-const WIFE_STAFF_ID = 'staff-barsha-bhattarai';
-const STORAGE_KEY = 'st_vincents_roster_data_v1';
-const REQUESTS_KEY = 'st_vincents_swap_requests_v1';
+const WIFE_STAFF_ID = 'staff-richa-budhathoki';
+const STORAGE_KEY = 'st_vincents_roster_data_v2';
+const REQUESTS_KEY = 'st_vincents_swap_requests_v2';
 
 export function App() {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(() => {
@@ -95,11 +95,11 @@ export function App() {
         fromStaffId: WIFE_STAFF_ID,
         toStaffId: 'staff-sushmita-rana-magar',
         dateStr: '2026-10-18',
-        originalShift: 'E',
+        originalShift: 'N',
         targetShift: 'OFF',
         status: 'pending',
-        notes: 'Requested Sunday evening swap via WhatsApp',
-        timestamp: '2026-10-08 19:30'
+        notes: 'Requested Sunday shift coverage via WhatsApp',
+        timestamp: 'Today 19:30'
       }
     ];
   });
@@ -190,7 +190,7 @@ export function App() {
   };
 
   const handleResetRoster = () => {
-    if (window.confirm('Reset roster back to official hospital schedule?')) {
+    if (window.confirm('Reset roster back to official schedule?')) {
       setStaffMembers(INITIAL_STAFF_MEMBERS);
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -212,7 +212,7 @@ export function App() {
 
       {/* Main Workspace */}
       <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6 flex-1">
-        {/* Staff Selector (Accessible in both modes) */}
+        {/* Sleek Staff Selector (Dropdown/Search with Richa highlighted) */}
         <StaffSelector
           staffMembers={staffMembers}
           selectedStaffId={selectedStaffId}
@@ -235,8 +235,8 @@ export function App() {
               onInitiateSwap={(dayInfo, shiftCode) => handleOpenSwapModal(dayInfo, shiftCode)}
             />
           ) : (
-            <div className="p-8 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
-              No staff selected.
+            <div className="p-8 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+              No nurse selected.
             </div>
           )
         ) : (
@@ -254,21 +254,21 @@ export function App() {
         )}
 
         {/* Bottom Helper Bar */}
-        <div className="p-4 bg-white rounded-3xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
+        <div className="p-4 bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>
-              Hospital Ward Portal • Compliant with St. Vincent's Health Network 9 North / GSS
+            <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+            <span className="font-medium text-slate-600">
+              Personal Shift & Swap Companion • Made with love for Richa & Ward 9 North Nurses
             </span>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={handleResetRoster}
-              className="text-slate-500 hover:text-slate-800 flex items-center gap-1 font-medium hover:underline"
+              className="text-slate-400 hover:text-slate-700 flex items-center gap-1 font-medium transition"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset to Original Schedule</span>
+              <span>Reset Schedule</span>
             </button>
           </div>
         </div>
@@ -281,19 +281,19 @@ export function App() {
             setSelectedStaffId(WIFE_STAFF_ID);
             setActiveTab('personal');
           }}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold ${
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition ${
             selectedStaffId === WIFE_STAFF_ID && activeTab === 'personal'
               ? 'text-rose-600'
               : 'text-slate-500 hover:text-slate-800'
           }`}
         >
           <Heart className="w-5 h-5 fill-current" />
-          <span>Barsha</span>
+          <span>Richa</span>
         </button>
 
         <button
           onClick={() => setActiveTab('personal')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold ${
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition ${
             activeTab === 'personal' && selectedStaffId !== WIFE_STAFF_ID
               ? 'text-blue-600'
               : 'text-slate-500 hover:text-slate-800'
@@ -305,7 +305,7 @@ export function App() {
 
         <button
           onClick={() => setActiveTab('master')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold ${
+          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition ${
             activeTab === 'master' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -315,7 +315,7 @@ export function App() {
 
         <button
           onClick={() => setIsLegendOpen(true)}
-          className="flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800"
+          className="flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 transition"
         >
           <Info className="w-5 h-5" />
           <span>Legend</span>
@@ -323,7 +323,7 @@ export function App() {
 
         <button
           onClick={() => setIsUploadOpen(true)}
-          className="flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800"
+          className="flex flex-col items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 transition"
         >
           <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
           <span>Upload</span>
