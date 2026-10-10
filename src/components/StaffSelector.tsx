@@ -1,206 +1,270 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Search, 
-  ChevronDown, 
-  Check, 
-  X,
-  UserCheck
-} from 'lucide-react';
-import { StaffMember } from '../types/roster';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { Search, X, Check, Link2, Users } from 'lucide-react';
+import { StaffMember, ShiftCode } from '../types/roster';
+import { SHIFT_DEFINITIONS } from '../data/rosterData';
 
 interface StaffSelectorProps {
   staffMembers: StaffMember[];
   selectedStaffId: string;
   onSelectStaff: (id: string) => void;
-  wifeStaffId: string;
+  homeStaffId: string;
 }
+
+const todayKey = () => {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+};
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p.charAt(0).toUpperCase())
+    .join('');
+
+const ShiftChip: React.FC<{ code: ShiftCode }> = ({ code }) => {
+  const def = SHIFT_DEFINITIONS[code] || SHIFT_DEFINITIONS.OFF;
+  return (
+    <span
+      className={`shrink-0 px-1.5 py-0.5 rounded-md border text-[10px] font-extrabold ${def.badgeBg} ${def.badgeText} ${def.badgeBorder}`}
+      title={`Today: ${def.label}`}
+    >
+      {code}
+    </span>
+  );
+};
 
 export const StaffSelector: React.FC<StaffSelectorProps> = ({
   staffMembers,
   selectedStaffId,
   onSelectStaff,
-  wifeStaffId,
+  homeStaffId,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useState('');
+  const [focused, setFocused] = useState(false);
+  const [highlight, setHighlight] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Close dropdown on outside click
+  const today = todayKey();
+  const current = staffMembers.find((s) => s.id === selectedStaffId) || staffMembers[0];
+  const isHome = current?.id === homeStaffId;
+  const open = focused;
+
+  // Results: home nurse pinned first, then alphabetical. Matches name, role or section.
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const matches = staffMembers.filter((s) => {
+      if (!q) return true;
+      return (
+        s.name.toLowerCase().includes(q) ||
+        s.role.toLowerCase().includes(q) ||
+        s.section.toLowerCase().includes(q)
+      );
+    });
+    return [...matches].sort((a, b) => {
+      if (a.id === homeStaffId) return -1;
+      if (b.id === homeStaffId) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [staffMembers, query, homeStaffId]);
+
+  useEffect(() => setHighlight(0), [query, open]);
+
+  // Close when tapping/clicking anywhere outside the picker
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const handler = (e: Event) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setFocused(false);
+    };
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
   }, []);
 
-  const currentStaff = staffMembers.find((s) => s.id === selectedStaffId) || staffMembers[0];
-  const richaStaff = staffMembers.find((s) => s.id === wifeStaffId);
-  const isRichaSelected = selectedStaffId === wifeStaffId;
-
-  // Filtered staff members for the search dropdown
-  const filteredStaff = staffMembers.filter((s) => {
-    const q = searchTerm.toLowerCase();
-    return s.name.toLowerCase().includes(q) || s.role.toLowerCase().includes(q) || s.section.toLowerCase().includes(q);
-  });
-
-  const handleSelect = (id: string) => {
+  const choose = (id: string) => {
     onSelectStaff(id);
-    setIsOpen(false);
-    setSearchTerm('');
+    setQuery('');
+    setFocused(false);
+    inputRef.current?.blur();
   };
 
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocused(true);
+      setHighlight((h) => Math.min(h + 1, results.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlight((h) => Math.max(h - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (results[highlight]) choose(results[highlight].id);
+    } else if (e.key === 'Escape') {
+      setFocused(false);
+      inputRef.current?.blur();
+    }
+  };
+
+  const copyLink = async () => {
+    const url = `${window.location.origin}${window.location.pathname}?staff=${encodeURIComponent(
+      current.id
+    )}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt('Copy this personal link:', url);
+    }
+  };
+
+  if (!current) return null;
+
   return (
-    <div className="bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-5 relative" ref={dropdownRef}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        
-        {/* Left: Clearly Shows Whose Schedule is Active */}
-        <div className="flex items-center gap-3.5">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base shadow-sm transition-transform ${
-            isRichaSelected
-              ? 'bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-rose-500/25 ring-4 ring-rose-100'
-              : 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-blue-500/20'
-          }`}>
-            {isRichaSelected ? '❤️' : currentStaff.name.charAt(0)}
+    <section
+      ref={wrapRef}
+      aria-label="Choose whose roster to view"
+      className="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-5"
+    >
+      {/* Who is being viewed */}
+      <div className="flex items-center gap-3.5">
+        <div
+          className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-base shadow-sm shrink-0 ${
+            isHome
+              ? 'bg-gradient-to-tr from-rose-500 to-pink-500 text-white ring-4 ring-rose-100'
+              : 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white'
+          }`}
+        >
+          {isHome ? '❤️' : initials(current.name)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            Roster for
           </div>
-
-          <div>
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              Currently Viewing Roster For:
-            </div>
-            <h2 className="text-base sm:text-xl font-black text-slate-900 tracking-tight flex items-center gap-1.5">
-              <span>{currentStaff.name}</span>
-              {isRichaSelected && <span className="text-sm">❤️</span>}
-            </h2>
-
-            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
-              <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md text-[11px]">
-                {currentStaff.role}
-              </span>
-              <span>•</span>
-              <span>FTE {currentStaff.fte}</span>
-              <span>•</span>
-              <span className="text-slate-600">{currentStaff.section}</span>
-            </div>
+          <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight truncate">
+            {current.name} {isHome && <span className="text-sm">❤️</span>}
+          </h2>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500 font-medium">
+            <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md text-[11px]">
+              {current.role}
+            </span>
+            <span>FTE {current.fte}</span>
+            <span className="truncate">{current.section}</span>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={copyLink}
+          className="shrink-0 p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 transition"
+          title="Copy a personal link to this roster"
+          aria-label="Copy a personal link to this roster"
+        >
+          {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Link2 className="w-4 h-4" />}
+        </button>
+      </div>
 
-        {/* Right: Clean Search & Select Combobox */}
-        <div className="relative w-full sm:w-80">
-          <button
-            type="button"
-            onClick={() => setIsOpen(!isOpen)}
-            className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 text-slate-800 rounded-2xl px-4 py-2.5 text-xs font-semibold flex items-center justify-between gap-2 transition shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-          >
-            <div className="flex items-center gap-2 truncate">
-              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span className="truncate">
-                {isOpen ? 'Type nurse name...' : `Switch Staff (Viewing: ${currentStaff.name})`}
-              </span>
-            </div>
-            <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          {/* Dropdown Menu Modal */}
-          {isOpen && (
-            <div className="absolute right-0 top-full mt-2 w-full sm:w-84 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-3 space-y-2.5 animate-in fade-in zoom-in-95">
-              {/* Search Bar inside Dropdown */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  autoFocus
-                  placeholder="Search by nurse name or role..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Top Pinned Card: Richa Budhathoki ❤️ */}
-              {richaStaff && (!searchTerm || richaStaff.name.toLowerCase().includes(searchTerm.toLowerCase())) && (
-                <div>
-                  <button
-                    onClick={() => handleSelect(richaStaff.id)}
-                    className={`w-full p-2.5 rounded-xl border flex items-center justify-between transition ${
-                      selectedStaffId === richaStaff.id
-                        ? 'bg-rose-50 border-rose-300 text-rose-900 shadow-2xs font-bold'
-                        : 'bg-rose-50/60 hover:bg-rose-100/70 border-rose-200 text-rose-900 font-semibold'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-rose-500 text-white flex items-center justify-center text-xs font-bold shadow-xs">
-                        ❤️
-                      </div>
-                      <div className="text-left">
-                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                          <span>{richaStaff.name}</span>
-                          <span>❤️</span>
-                        </div>
-                        <span className="text-[10px] text-slate-500">{richaStaff.role} • FTE {richaStaff.fte}</span>
-                      </div>
-                    </div>
-                    {selectedStaffId === richaStaff.id && (
-                      <Check className="w-4 h-4 text-rose-600 shrink-0" />
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {/* Full Staff List */}
-              <div className="pt-1 border-t border-slate-100">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1">
-                  All Staff ({filteredStaff.filter((s) => s.id !== wifeStaffId).length})
-                </p>
-                <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
-                  {filteredStaff
-                    .filter((s) => s.id !== wifeStaffId)
-                    .map((staff) => {
-                      const isSelected = selectedStaffId === staff.id;
-
-                      return (
-                        <button
-                          key={staff.id}
-                          onClick={() => handleSelect(staff.id)}
-                          className={`w-full p-2 rounded-xl text-left flex items-center justify-between text-xs transition ${
-                            isSelected
-                              ? 'bg-blue-50 text-blue-900 font-bold border border-blue-200'
-                              : 'hover:bg-slate-50 text-slate-700'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-[10px] font-bold shrink-0">
-                              {staff.name.charAt(0)}
-                            </div>
-                            <div className="truncate">
-                              <span className="font-semibold block truncate">{staff.name}</span>
-                              <span className="text-[10px] text-slate-400 font-normal">
-                                {staff.role} • {staff.section}
-                              </span>
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <Check className="w-3.5 h-3.5 text-blue-600 shrink-0 ml-2" />
-                          )}
-                        </button>
-                      );
-                    })}
-                </div>
-              </div>
-            </div>
+      {/* Search: results render inline so nothing can be hidden behind other cards */}
+      <div className="mt-4">
+        <label htmlFor="staff-search" className="sr-only">
+          Find a colleague by name
+        </label>
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            id="staff-search"
+            ref={inputRef}
+            type="text"
+            role="combobox"
+            aria-expanded={open}
+            aria-controls="staff-results"
+            aria-autocomplete="list"
+            autoComplete="off"
+            enterKeyHint="go"
+            placeholder="Search your name or a colleague…"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setFocused(true);
+            }}
+            onFocus={() => setFocused(true)}
+            onKeyDown={onKeyDown}
+            className="w-full bg-slate-50 border border-slate-200 focus:border-blue-500 focus:bg-white rounded-2xl pl-10 pr-10 py-3 text-base sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/15"
+          />
+          {(query || open) && (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery('');
+                setFocused(false);
+                inputRef.current?.blur();
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-700"
+              aria-label="Close search"
+            >
+              <X className="w-4 h-4" />
+            </button>
           )}
         </div>
+
+        {open && (
+          <div className="mt-2 rounded-2xl border border-slate-200 bg-white overflow-hidden">
+            <div className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <Users className="w-3.5 h-3.5" />
+              {results.length} {results.length === 1 ? 'colleague' : 'colleagues'} · today’s shift
+            </div>
+            <ul
+              id="staff-results"
+              role="listbox"
+              aria-label="Staff"
+              className="max-h-[50vh] overflow-y-auto overscroll-contain divide-y divide-slate-100"
+            >
+              {results.length === 0 && (
+                <li className="px-4 py-6 text-center text-sm text-slate-500">
+                  No one matches “{query}”. Try a first name or surname.
+                </li>
+              )}
+              {results.map((s, i) => {
+                const selected = s.id === current.id;
+                const isHomeRow = s.id === homeStaffId;
+                const code = (s.shifts[today] || 'OFF') as ShiftCode;
+                return (
+                  <li
+                    key={s.id}
+                    role="option"
+                    aria-selected={selected}
+                    onMouseEnter={() => setHighlight(i)}
+                    onClick={() => choose(s.id)}
+                    className={`flex items-center gap-3 px-3.5 py-3 cursor-pointer min-h-[56px] ${
+                      i === highlight ? 'bg-blue-50' : 'bg-white'
+                    } ${isHomeRow ? 'bg-rose-50/70' : ''}`}
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
+                        isHomeRow ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {isHomeRow ? '❤️' : initials(s.name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-slate-900 truncate">
+                        {s.name} {isHomeRow && '❤️'}
+                      </div>
+                      <div className="text-xs text-slate-500 truncate">
+                        {s.role} · {s.section}
+                      </div>
+                    </div>
+                    <ShiftChip code={code} />
+                    {selected && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 };

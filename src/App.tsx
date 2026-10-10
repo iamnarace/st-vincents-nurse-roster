@@ -5,9 +5,7 @@ import {
 import { 
   StaffSelector 
 } from './components/StaffSelector';
-import { 
-  PersonalCalendarView 
-} from './components/PersonalCalendarView';
+import { MyRoster } from './components/MyRoster';
 import { 
   WardMasterView 
 } from './components/WardMasterView';
@@ -45,9 +43,10 @@ import {
   Users
 } from 'lucide-react';
 
-const WIFE_STAFF_ID = 'staff-richa-budhathoki';
+const HOME_STAFF_ID = 'staff-richa-budhathoki';
 const STORAGE_KEY = 'st_vincents_roster_data_v6';
 const REQUESTS_KEY = 'st_vincents_swap_requests_v6';
+const SELECTED_KEY = 'st_vincents_selected_staff';
 
 export function App() {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(() => {
@@ -62,7 +61,20 @@ export function App() {
     return INITIAL_STAFF_MEMBERS;
   });
 
-  const [selectedStaffId, setSelectedStaffId] = useState<string>(WIFE_STAFF_ID);
+  // Whose roster to show: ?staff= link wins, then last choice on this device, then the home nurse.
+  const [selectedStaffId, setSelectedStaffId] = useState<string>(() => {
+    const valid = (id: string | null) =>
+      id && staffMembers.some((s) => s.id === id) ? id : null;
+    try {
+      const fromUrl = valid(new URLSearchParams(window.location.search).get('staff'));
+      if (fromUrl) return fromUrl;
+      const saved = valid(localStorage.getItem(SELECTED_KEY));
+      if (saved) return saved;
+    } catch {
+      /* storage or URL unavailable: use default */
+    }
+    return HOME_STAFF_ID;
+  });
   const [activeTab, setActiveTab] = useState<'personal' | 'master'>('personal');
   const [isLegendOpen, setIsLegendOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -101,6 +113,19 @@ export function App() {
   }, [swapRequests]);
 
   const activeStaff = staffMembers.find((s) => s.id === selectedStaffId) || staffMembers[0];
+
+  // Remember the choice and keep the address bar shareable (?staff=<id>)
+  useEffect(() => {
+    if (!activeStaff) return;
+    try {
+      localStorage.setItem(SELECTED_KEY, activeStaff.id);
+      const url = new URL(window.location.href);
+      url.searchParams.set('staff', activeStaff.id);
+      window.history.replaceState(null, '', url);
+    } catch {
+      /* non-critical */
+    }
+  }, [activeStaff?.id]);
 
   // Initiate shift swap modal from Personal or Master views
   const handleOpenSwapModal = (dayInfo: DayInfo, currentShift: ShiftCode, specificStaff?: StaffMember) => {
@@ -188,27 +213,24 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pb-24 md:pb-6">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pb-28 md:pb-6">
       {/* Top Header */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        selectedStaff={activeStaff}
-        onSelectStaff={setSelectedStaffId}
-        wifeStaffId={WIFE_STAFF_ID}
         onOpenLegend={() => setIsLegendOpen(true)}
         onOpenUpload={() => setIsUploadOpen(true)}
         onExport={handleExport}
       />
 
       {/* Main Workspace */}
-      <main className="max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-5 flex-1">
+      <main className="max-w-3xl w-full mx-auto p-4 space-y-5 flex-1">
         {/* Sleek Staff Selector (Search Dropdown with Richa highlighted) */}
         <StaffSelector
           staffMembers={staffMembers}
           selectedStaffId={selectedStaffId}
           onSelectStaff={setSelectedStaffId}
-          wifeStaffId={WIFE_STAFF_ID}
+          homeStaffId={HOME_STAFF_ID}
         />
 
         {/* Swap Tracker (shows pending / active requests) */}
@@ -221,7 +243,7 @@ export function App() {
         {/* Active View: Personal Calendar vs Master Roster */}
         {activeTab === 'personal' ? (
           activeStaff ? (
-            <PersonalCalendarView
+            <MyRoster
               staff={activeStaff}
               onInitiateSwap={(dayInfo, shiftCode) => handleOpenSwapModal(dayInfo, shiftCode)}
               onSyncCalendar={handleSyncCalendar}
@@ -241,7 +263,7 @@ export function App() {
             onInitiateSwap={(dayInfo, shiftCode, specificStaff) =>
               handleOpenSwapModal(dayInfo, shiftCode, specificStaff)
             }
-            wifeStaffId={WIFE_STAFF_ID}
+            homeStaffId={HOME_STAFF_ID}
           />
         )}
 

@@ -26,14 +26,14 @@ interface WardMasterViewProps {
   staffMembers: StaffMember[];
   onSelectStaff: (id: string) => void;
   onInitiateSwap: (dayInfo: DayInfo, currentShift: ShiftCode, staff: StaffMember) => void;
-  wifeStaffId: string;
+  homeStaffId: string;
 }
 
 export const WardMasterView: React.FC<WardMasterViewProps> = ({
   staffMembers,
   onSelectStaff,
   onInitiateSwap,
-  wifeStaffId,
+  homeStaffId,
 }) => {
   // Format current date YYYY-MM-DD to select today by default
   const getTodayStr = () => {
@@ -374,14 +374,14 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
             <div className="divide-y divide-slate-100">
               {dailyGroups.amList.length > 0 ? (
                 dailyGroups.amList.map(({ staff, code }) => {
-                  const isWife = staff.id === wifeStaffId;
+                  const isHomeStaff = staff.id === homeStaffId;
                   const meta = SHIFT_DEFINITIONS[code] || SHIFT_DEFINITIONS.M;
 
                   return (
                     <div
                       key={staff.id}
                       className={`p-3.5 flex items-center justify-between gap-3 hover:bg-slate-50 transition ${
-                        isWife ? 'bg-amber-50/30' : ''
+                        isHomeStaff ? 'bg-amber-50/30' : ''
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -390,7 +390,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                           className="font-bold text-xs sm:text-sm text-slate-800 hover:text-blue-600 text-left truncate flex items-center gap-1.5"
                         >
                           <span className="truncate">{staff.name}</span>
-                          {isWife && <Heart className="w-3.5 h-3.5 text-rose-500 fill-current shrink-0" />}
+                          {isHomeStaff && <Heart className="w-3.5 h-3.5 text-rose-500 fill-current shrink-0" />}
                         </button>
                         <span className="text-[11px] font-semibold text-slate-500 shrink-0">
                           {staff.role} • {staff.section}
@@ -438,14 +438,14 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
             <div className="divide-y divide-slate-100">
               {dailyGroups.pmList.length > 0 ? (
                 dailyGroups.pmList.map(({ staff, code }) => {
-                  const isWife = staff.id === wifeStaffId;
+                  const isHomeStaff = staff.id === homeStaffId;
                   const meta = SHIFT_DEFINITIONS[code] || SHIFT_DEFINITIONS.E;
 
                   return (
                     <div
                       key={staff.id}
                       className={`p-3.5 flex items-center justify-between gap-3 hover:bg-slate-50 transition ${
-                        isWife ? 'bg-emerald-50/30' : ''
+                        isHomeStaff ? 'bg-emerald-50/30' : ''
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -454,7 +454,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                           className="font-bold text-xs sm:text-sm text-slate-800 hover:text-blue-600 text-left truncate flex items-center gap-1.5"
                         >
                           <span className="truncate">{staff.name}</span>
-                          {isWife && <Heart className="w-3.5 h-3.5 text-rose-500 fill-current shrink-0" />}
+                          {isHomeStaff && <Heart className="w-3.5 h-3.5 text-rose-500 fill-current shrink-0" />}
                         </button>
                         <span className="text-[11px] font-semibold text-slate-500 shrink-0">
                           {staff.role} • {staff.section}
@@ -501,14 +501,14 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
             <div className="divide-y divide-slate-100">
               {dailyGroups.ndList.length > 0 ? (
                 dailyGroups.ndList.map(({ staff, code }) => {
-                  const isWife = staff.id === wifeStaffId;
+                  const isHomeStaff = staff.id === homeStaffId;
                   const meta = SHIFT_DEFINITIONS[code] || SHIFT_DEFINITIONS.N;
 
                   return (
                     <div
                       key={staff.id}
                       className={`p-3.5 flex items-center justify-between gap-3 hover:bg-slate-50 transition ${
-                        isWife ? 'bg-purple-50/30' : ''
+                        isHomeStaff ? 'bg-purple-50/30' : ''
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -517,7 +517,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                           className="font-bold text-xs sm:text-sm text-slate-800 hover:text-blue-600 text-left truncate flex items-center gap-1.5"
                         >
                           <span className="truncate">{staff.name}</span>
-                          {isWife && <Heart className="w-3.5 h-3.5 text-rose-500 fill-current shrink-0" />}
+                          {isHomeStaff && <Heart className="w-3.5 h-3.5 text-rose-500 fill-current shrink-0" />}
                         </button>
                         <span className="text-[11px] font-semibold text-slate-500 shrink-0">
                           {staff.role} • {staff.section}
@@ -569,7 +569,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
             <div className="divide-y divide-slate-100">
               {dailyGroups.offList.length > 0 ? (
                 dailyGroups.offList.map(({ staff, code }) => {
-                  const isWife = staff.id === wifeStaffId;
+                  const isHomeStaff = staff.id === homeStaffId;
                   const isAdo = ['ADO', 'ADO4', 'ADO6', 'ADO10'].includes(code);
                   const isLeave = ['AL', 'AL6'].includes(code);
 
@@ -577,7 +577,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                     <div
                       key={staff.id}
                       className={`p-3.5 flex items-center justify-between gap-3 hover:bg-slate-50 transition ${
-                        isWife ? 'bg-sky-50/30' : ''
+                        isHomeStaff ? 'bg-sky-50/30' : ''
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -586,7 +586,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                           className="font-bold text-xs sm:text-sm text-slate-800 hover:text-blue-600 text-left truncate flex items-center gap-1.5"
                         >
                           <span className="truncate">{staff.name}</span>
-                          {isWife && <Heart className="w-3.5 h-3.5 text-rose-500 fill-current shrink-0" />}
+                          {isHomeStaff && <Heart className="w-3.5 h-3.5 text-rose-500 fill-current shrink-0" />}
                         </button>
                         <span className="text-[11px] font-semibold text-slate-500 shrink-0">
                           {staff.role}
@@ -661,18 +661,18 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
               {/* Table Body */}
               <tbody className="divide-y divide-slate-100">
                 {matrixFilteredStaff.map((staff) => {
-                  const isWife = staff.id === wifeStaffId;
+                  const isHomeStaff = staff.id === homeStaffId;
 
                   return (
                     <tr
                       key={staff.id}
                       className={`hover:bg-blue-50/40 transition-colors ${
-                        isWife ? 'bg-rose-50/30' : ''
+                        isHomeStaff ? 'bg-rose-50/30' : ''
                       }`}
                     >
                       {/* Sticky Staff Name Column */}
                       <td className={`p-2.5 sticky left-0 z-10 border-r border-slate-200 backdrop-blur-xs ${
-                        isWife ? 'bg-rose-50/95 font-bold' : 'bg-white/95'
+                        isHomeStaff ? 'bg-rose-50/95 font-bold' : 'bg-white/95'
                       }`}>
                         <div className="flex items-center justify-between gap-1.5">
                           <div className="min-w-0">
@@ -689,7 +689,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                               <span className="truncate">{staff.section}</span>
                             </div>
                           </div>
-                          {isWife && (
+                          {isHomeStaff && (
                             <span className="p-1 rounded-full bg-rose-100 text-rose-600 shrink-0" title="Highlighted Profile">
                               <Heart className="w-3.5 h-3.5 fill-current" />
                             </span>
