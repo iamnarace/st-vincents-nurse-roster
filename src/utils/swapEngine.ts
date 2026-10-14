@@ -25,7 +25,7 @@ export function isEveningShift(shift: ShiftCode | undefined): boolean {
 
 export function isLeave(shift: ShiftCode | undefined): boolean {
   if (!shift) return false;
-  return ['AL', 'AL6'].includes(shift);
+  return ['AL', 'AL4', 'AL6', 'AL10', 'SICK'].includes(shift);
 }
 
 export function isOffOrAdo(shift: ShiftCode | undefined): boolean {

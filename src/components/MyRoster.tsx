@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeftRight, CalendarPlus, Moon, Sun, Sunset, Coffee, Palmtree } from 'lucide-react';
 import { StaffMember, DayInfo, ShiftCode } from '../types/roster';
 import { SHIFT_DEFINITIONS, ROSTER_DAYS } from '../data/rosterData';
+import { ProgressCard } from './ProgressCard';
+import { HoursCard } from './HoursCard';
 
 interface MyRosterProps {
   staff: StaffMember;
@@ -130,11 +132,14 @@ export const MyRoster: React.FC<MyRosterProps> = ({ staff, onInitiateSwap, onSyn
 
   return (
     <div className="space-y-5">
+      {/* Level + hours toward next level (editable, keeps adding as shifts finish) */}
+      <ProgressCard staff={staff} now={now} />
+
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-5 sm:p-6">
-        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${heroTone.bar}`} />
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-500 text-white p-5 sm:p-6 shadow-lg">
+        <div className={`absolute left-0 top-0 bottom-0 w-2 ${heroTone.bar}`} />
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
             <HeroIcon className="w-6 h-6" />
           </div>
           <div className="min-w-0">
@@ -149,7 +154,7 @@ export const MyRoster: React.FC<MyRosterProps> = ({ staff, onInitiateSwap, onSyn
             ['Hours', totals.hours],
             ['Nights', totals.nights],
           ].map(([k, v]) => (
-            <div key={k as string} className="rounded-2xl bg-white/10 py-2.5">
+            <div key={k as string} className="rounded-2xl bg-white/20 py-2.5">
               <div className="text-xl font-black leading-none">{v}</div>
               <div className="text-[11px] uppercase tracking-wider text-white/60 mt-1">{k}</div>
             </div>
@@ -157,11 +162,13 @@ export const MyRoster: React.FC<MyRosterProps> = ({ staff, onInitiateSwap, onSyn
         </div>
         <button
           onClick={onSyncCalendar}
-          className="mt-4 w-full flex items-center justify-center gap-2 rounded-2xl bg-white text-slate-900 font-bold text-sm py-3 hover:bg-slate-100 transition"
+          className="mt-4 w-full flex items-center justify-center gap-2 rounded-2xl bg-white text-violet-700 font-bold text-sm py-3 hover:bg-violet-50 shadow transition"
         >
           <CalendarPlus className="w-4 h-4" /> Add to my phone calendar
         </button>
       </section>
+
+      <HoursCard staff={staff} now={now} />
 
       {/* Week filter */}
       <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pb-1" role="tablist" aria-label="Filter by week">
@@ -173,8 +180,8 @@ export const MyRoster: React.FC<MyRosterProps> = ({ staff, onInitiateSwap, onSyn
             onClick={() => setWeek(w)}
             className={`shrink-0 px-4 py-2 rounded-full text-sm font-bold border transition ${
               week === w
-                ? 'bg-slate-900 text-white border-slate-900'
-                : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                ? 'bg-violet-600 text-white border-violet-600 shadow'
+                : 'bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100'
             }`}
           >
             {w === 'all' ? 'All' : `Week ${w}`}
@@ -193,7 +200,7 @@ export const MyRoster: React.FC<MyRosterProps> = ({ staff, onInitiateSwap, onSyn
           return (
             <li
               key={d.dateStr}
-              className={`flex items-center gap-3 px-4 py-3 ${isToday ? 'bg-blue-50/70' : ''}`}
+              className={`flex items-center gap-3 px-4 py-3 ${isToday ? 'bg-violet-50' : ''}`}
             >
               <div className={`w-1.5 self-stretch rounded-full ${t.bar}`} />
               <div className="w-14 shrink-0">
@@ -207,7 +214,7 @@ export const MyRoster: React.FC<MyRosterProps> = ({ staff, onInitiateSwap, onSyn
                   <span className={`px-2 py-0.5 rounded-md text-xs font-extrabold ${t.chip}`}>{code}</span>
                   <span className="text-sm font-semibold text-slate-800 truncate">{def.label}</span>
                   {isToday && (
-                    <span className="text-[10px] font-extrabold uppercase bg-blue-600 text-white px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-extrabold uppercase bg-fuchsia-600 text-white px-1.5 py-0.5 rounded">
                       Today
                     </span>
                   )}
@@ -217,7 +224,7 @@ export const MyRoster: React.FC<MyRosterProps> = ({ staff, onInitiateSwap, onSyn
               {working && (
                 <button
                   onClick={() => onInitiateSwap(d, code)}
-                  className="shrink-0 p-2.5 rounded-xl bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 transition"
+                  className="shrink-0 p-2.5 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 transition"
                   aria-label={`Find a swap for ${dateLabel(d.dateStr)}`}
                   title="Find a swap"
                 >

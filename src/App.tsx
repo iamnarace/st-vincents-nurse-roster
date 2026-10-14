@@ -44,8 +44,8 @@ import {
 } from 'lucide-react';
 
 const HOME_STAFF_ID = 'staff-richa-budhathoki';
-const STORAGE_KEY = 'st_vincents_roster_data_v6';
-const REQUESTS_KEY = 'st_vincents_swap_requests_v6';
+const STORAGE_KEY = 'st_vincents_roster_data_v7';
+const REQUESTS_KEY = 'st_vincents_swap_requests_v7';
 const SELECTED_KEY = 'st_vincents_selected_staff';
 
 export function App() {
@@ -213,7 +213,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans pb-28 md:pb-6">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-fuchsia-50 flex flex-col font-sans pb-28 md:pb-6">
       {/* Top Header */}
       <Header
         activeTab={activeTab}

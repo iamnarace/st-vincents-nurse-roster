@@ -137,10 +137,10 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
 
   const sections: (StaffSection | 'All')[] = [
     'All',
-    'RN In charge',
     'RN',
     'Management',
     'Registered Nurse Transition Program (TSPRN)',
+    'Pathways to Practice RN',
     'EEN'
   ];
 
@@ -175,7 +175,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
             <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
               <span>Ward 9 North • Ward Directory</span>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">
-                33 Rostered Staff
+                {staffMembers.length} Rostered Staff
               </span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -184,16 +184,16 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
           </div>
 
           {/* View Toggle: Day View (Mobile) vs Full Matrix */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl text-xs font-bold self-start sm:self-center">
+          <div className="flex items-center gap-1 bg-violet-100 p-1 rounded-2xl text-xs font-bold self-start sm:self-center">
             <button
               onClick={() => setViewMode('daily')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition ${
                 viewMode === 'daily'
-                  ? 'bg-white text-blue-700 shadow-2xs font-extrabold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-violet-600 text-white shadow font-extrabold'
+                  : 'text-violet-700 hover:bg-violet-200'
               }`}
             >
-              <CalendarDays className="w-4 h-4 text-blue-600" />
+              <CalendarDays className="w-4 h-4" />
               <span>Day View (Mobile)</span>
             </button>
 
@@ -201,11 +201,11 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
               onClick={() => setViewMode('matrix')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition ${
                 viewMode === 'matrix'
-                  ? 'bg-white text-blue-700 shadow-2xs font-extrabold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-violet-600 text-white shadow font-extrabold'
+                  : 'text-violet-700 hover:bg-violet-200'
               }`}
             >
-              <TableProperties className="w-4 h-4 text-blue-600" />
+              <TableProperties className="w-4 h-4" />
               <span>Full Matrix</span>
             </button>
           </div>
@@ -232,8 +232,8 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                 onClick={() => setSelectedSection(sec)}
                 className={`px-2.5 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
                   selectedSection === sec
-                    ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100'
+                    ? 'bg-fuchsia-600 text-white shadow'
+                    : 'bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200 hover:bg-fuchsia-100'
                 }`}
               >
                 {sec === 'All' ? 'All Roles' : sec.replace('Registered Nurse Transition Program (TSPRN)', 'TSPRN')}
@@ -253,7 +253,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                 <button
                   onClick={handlePrevDay}
                   disabled={selectedDayIndex <= 0}
-                  className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none text-slate-700 transition"
+                  className="p-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 disabled:opacity-30 disabled:pointer-events-none text-violet-700 transition"
                   title="Previous Day"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -264,7 +264,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                 <button
                   onClick={handleNextDay}
                   disabled={selectedDayIndex >= ROSTER_DAYS.length - 1}
-                  className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none text-slate-700 transition"
+                  className="p-1.5 rounded-xl bg-violet-100 hover:bg-violet-200 disabled:opacity-30 disabled:pointer-events-none text-violet-700 transition"
                   title="Next Day"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -274,7 +274,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
               {selectedDateStr !== todayStr && (
                 <button
                   onClick={() => setSelectedDateStr(defaultDateStr)}
-                  className="text-xs text-blue-600 font-bold hover:underline px-2 py-1 rounded-lg bg-blue-50"
+                  className="text-xs text-white font-bold px-3 py-1.5 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-700 shadow-sm"
                 >
                   Jump to Today
                 </button>
@@ -286,7 +286,7 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
               {ROSTER_DAYS.map((day) => {
                 const isSelected = day.dateStr === selectedDateStr;
                 const isToday = day.dateStr === todayStr;
-                const mLabel = day.dateStr.startsWith('2026-11') ? 'Nov' : 'Oct';
+                const mLabel = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(day.dateStr.slice(5, 7)) - 1];
 
                 return (
                   <button
@@ -294,9 +294,9 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                     onClick={() => setSelectedDateStr(day.dateStr)}
                     className={`flex flex-col items-center min-w-[56px] py-2 px-1.5 rounded-2xl border transition-all shrink-0 ${
                       isSelected
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm scale-105'
+                        ? 'bg-violet-600 text-white border-violet-600 shadow-md scale-105'
                         : isToday
-                          ? 'bg-blue-50 border-blue-300 text-blue-900 font-bold'
+                          ? 'bg-fuchsia-50 border-fuchsia-300 text-fuchsia-900 font-bold'
                           : day.isWeekend
                             ? 'bg-slate-100/70 border-slate-200 text-slate-700'
                             : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -403,10 +403,10 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                         </span>
                         <button
                           onClick={() => onInitiateSwap(selectedDayInfo, code, staff)}
-                          className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1"
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1"
                           title="Initiate swap with this colleague"
                         >
-                          <ArrowLeftRight className="w-3 h-3 text-slate-500" />
+                          <ArrowLeftRight className="w-3 h-3 text-white" />
                           <span className="hidden sm:inline">Swap</span>
                         </button>
                       </div>
@@ -467,9 +467,9 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                         </span>
                         <button
                           onClick={() => onInitiateSwap(selectedDayInfo, code, staff)}
-                          className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1"
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1"
                         >
-                          <ArrowLeftRight className="w-3 h-3 text-slate-500" />
+                          <ArrowLeftRight className="w-3 h-3 text-white" />
                           <span className="hidden sm:inline">Swap</span>
                         </button>
                       </div>
@@ -530,9 +530,9 @@ export const WardMasterView: React.FC<WardMasterViewProps> = ({
                         </span>
                         <button
                           onClick={() => onInitiateSwap(selectedDayInfo, code, staff)}
-                          className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 text-xs font-semibold border border-slate-200 transition flex items-center gap-1"
+                          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1"
                         >
-                          <ArrowLeftRight className="w-3 h-3 text-slate-500" />
+                          <ArrowLeftRight className="w-3 h-3 text-white" />
                           <span className="hidden sm:inline">Swap</span>
                         </button>
                       </div>

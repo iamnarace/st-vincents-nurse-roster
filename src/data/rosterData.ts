@@ -1,4 +1,5 @@
 import { ShiftCode, ShiftDefinition, StaffMember, DayInfo } from '../types/roster';
+import { OFFICIAL_STAFF, ROSTER_DATES } from './officialRoster';
 
 export const SHIFT_DEFINITIONS: Record<ShiftCode, ShiftDefinition> = {
   M: {
@@ -241,6 +242,90 @@ export const SHIFT_DEFINITIONS: Record<ShiftCode, ShiftDefinition> = {
     cardBg: 'bg-teal-50',
     description: 'Hospital Paid Study Day'
   },
+  M6: {
+    code: 'M6',
+    label: 'Morning (6hr)',
+    category: 'Morning',
+    time: '07:00 - 13:00',
+    durationHours: 6,
+    badgeBg: 'bg-amber-100',
+    badgeText: 'text-amber-900',
+    badgeBorder: 'border-amber-300',
+    cardBg: 'bg-amber-50/70',
+    description: 'Short Morning Shift (6 Hours)'
+  },
+  AL4: {
+    code: 'AL4',
+    label: 'Annual Leave (4hr)',
+    category: 'Leave',
+    time: 'Partial Day',
+    durationHours: 0,
+    badgeBg: 'bg-sky-100',
+    badgeText: 'text-sky-900',
+    badgeBorder: 'border-sky-300',
+    cardBg: 'bg-sky-50',
+    description: 'Part-day annual leave (4 hours)'
+  },
+  AL10: {
+    code: 'AL10',
+    label: 'Annual Leave (10hr)',
+    category: 'Leave',
+    time: 'Partial Day',
+    durationHours: 0,
+    badgeBg: 'bg-sky-100',
+    badgeText: 'text-sky-900',
+    badgeBorder: 'border-sky-300',
+    cardBg: 'bg-sky-50',
+    description: 'Annual leave (10 hours)'
+  },
+  SICK: {
+    code: 'SICK',
+    label: 'Sick Leave',
+    category: 'Leave',
+    time: 'All Day',
+    durationHours: 0,
+    badgeBg: 'bg-rose-100',
+    badgeText: 'text-rose-900',
+    badgeBorder: 'border-rose-300',
+    cardBg: 'bg-rose-50',
+    description: 'Sick leave'
+  },
+  WO: {
+    code: 'WO',
+    label: 'Ward Orientation',
+    category: 'Study',
+    time: '07:00 - 15:30',
+    durationHours: 8,
+    badgeBg: 'bg-teal-100',
+    badgeText: 'text-teal-900',
+    badgeBorder: 'border-teal-300',
+    cardBg: 'bg-teal-50',
+    description: 'Ward orientation day'
+  },
+  SN: {
+    code: 'SN',
+    label: 'Supernumerary',
+    category: 'Morning',
+    time: '07:00 - 15:30',
+    durationHours: 8,
+    badgeBg: 'bg-lime-100',
+    badgeText: 'text-lime-900',
+    badgeBorder: 'border-lime-300',
+    cardBg: 'bg-lime-50',
+    description: 'Supernumerary (not counted in ward numbers)'
+  },
+  AOE: {
+    code: 'AOE',
+    label: 'Allocated (AOE)',
+    category: 'Day',
+    time: '08:00 - 16:30',
+    durationHours: 8,
+    badgeBg: 'bg-fuchsia-100',
+    badgeText: 'text-fuchsia-900',
+    badgeBorder: 'border-fuchsia-300',
+    cardBg: 'bg-fuchsia-50',
+    description: 'Allocated day (AOE) as rostered'
+  },
   OFF: {
     code: 'OFF',
     label: 'Rostered Day Off',
@@ -255,306 +340,30 @@ export const SHIFT_DEFINITIONS: Record<ShiftCode, ShiftDefinition> = {
   }
 };
 
-export const ROSTER_DAYS: DayInfo[] = [
-  // Current active handover days (Oct 08 - Oct 11)
-  { dateStr: '2026-10-08', dayNumber: '08', dayName: 'T', fullDayName: 'Thursday', isWeekend: false, weekIndex: 0 },
-  { dateStr: '2026-10-09', dayNumber: '09', dayName: 'F', fullDayName: 'Friday', isWeekend: false, weekIndex: 0 },
-  { dateStr: '2026-10-10', dayNumber: '10', dayName: 'S', fullDayName: 'Saturday', isWeekend: true, weekIndex: 0 },
-  { dateStr: '2026-10-11', dayNumber: '11', dayName: 'S', fullDayName: 'Sunday', isWeekend: true, weekIndex: 0 },
+const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const;
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  // Week 1 (Oct 12 - Oct 18)
-  { dateStr: '2026-10-12', dayNumber: '12', dayName: 'M', fullDayName: 'Monday', isWeekend: false, weekIndex: 1 },
-  { dateStr: '2026-10-13', dayNumber: '13', dayName: 'T', fullDayName: 'Tuesday', isWeekend: false, weekIndex: 1 },
-  { dateStr: '2026-10-14', dayNumber: '14', dayName: 'W', fullDayName: 'Wednesday', isWeekend: false, weekIndex: 1 },
-  { dateStr: '2026-10-15', dayNumber: '15', dayName: 'T', fullDayName: 'Thursday', isWeekend: false, weekIndex: 1 },
-  { dateStr: '2026-10-16', dayNumber: '16', dayName: 'F', fullDayName: 'Friday', isWeekend: false, weekIndex: 1 },
-  { dateStr: '2026-10-17', dayNumber: '17', dayName: 'S', fullDayName: 'Saturday', isWeekend: true, weekIndex: 1 },
-  { dateStr: '2026-10-18', dayNumber: '18', dayName: 'S', fullDayName: 'Sunday', isWeekend: true, weekIndex: 1 },
+// 8 weeks, Monday 12 Oct - Sunday 6 Dec 2026 (two 4-week rosters)
+export const ROSTER_DAYS: DayInfo[] = ROSTER_DATES.map((dateStr, i) => {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  return {
+    dateStr,
+    dayNumber: String(d).padStart(2, '0'),
+    dayName: DAY_LETTERS[dow],
+    fullDayName: DAY_NAMES[dow],
+    isWeekend: dow === 0 || dow === 6,
+    weekIndex: Math.floor(i / 7) + 1,
+  };
+});
 
-  // Week 2 (Oct 19 - Oct 25)
-  { dateStr: '2026-10-19', dayNumber: '19', dayName: 'M', fullDayName: 'Monday', isWeekend: false, weekIndex: 2 },
-  { dateStr: '2026-10-20', dayNumber: '20', dayName: 'T', fullDayName: 'Tuesday', isWeekend: false, weekIndex: 2 },
-  { dateStr: '2026-10-21', dayNumber: '21', dayName: 'W', fullDayName: 'Wednesday', isWeekend: false, weekIndex: 2 },
-  { dateStr: '2026-10-22', dayNumber: '22', dayName: 'T', fullDayName: 'Thursday', isWeekend: false, weekIndex: 2 },
-  { dateStr: '2026-10-23', dayNumber: '23', dayName: 'F', fullDayName: 'Friday', isWeekend: false, weekIndex: 2 },
-  { dateStr: '2026-10-24', dayNumber: '24', dayName: 'S', fullDayName: 'Saturday', isWeekend: true, weekIndex: 2 },
-  { dateStr: '2026-10-25', dayNumber: '25', dayName: 'S', fullDayName: 'Sunday', isWeekend: true, weekIndex: 2 },
-
-  // Week 3 (Oct 26 - Nov 01)
-  { dateStr: '2026-10-26', dayNumber: '26', dayName: 'M', fullDayName: 'Monday', isWeekend: false, weekIndex: 3 },
-  { dateStr: '2026-10-27', dayNumber: '27', dayName: 'T', fullDayName: 'Tuesday', isWeekend: false, weekIndex: 3 },
-  { dateStr: '2026-10-28', dayNumber: '28', dayName: 'W', fullDayName: 'Wednesday', isWeekend: false, weekIndex: 3 },
-  { dateStr: '2026-10-29', dayNumber: '29', dayName: 'T', fullDayName: 'Thursday', isWeekend: false, weekIndex: 3 },
-  { dateStr: '2026-10-30', dayNumber: '30', dayName: 'F', fullDayName: 'Friday', isWeekend: false, weekIndex: 3 },
-  { dateStr: '2026-10-31', dayNumber: '31', dayName: 'S', fullDayName: 'Saturday', isWeekend: true, weekIndex: 3 },
-  { dateStr: '2026-11-01', dayNumber: '01', dayName: 'S', fullDayName: 'Sunday', isWeekend: true, weekIndex: 3 },
-
-  // Week 4 (Nov 02 - Nov 08)
-  { dateStr: '2026-11-02', dayNumber: '02', dayName: 'M', fullDayName: 'Monday', isWeekend: false, weekIndex: 4 },
-  { dateStr: '2026-11-03', dayNumber: '03', dayName: 'T', fullDayName: 'Tuesday', isWeekend: false, weekIndex: 4 },
-  { dateStr: '2026-11-04', dayNumber: '04', dayName: 'W', fullDayName: 'Wednesday', isWeekend: false, weekIndex: 4 },
-  { dateStr: '2026-11-05', dayNumber: '05', dayName: 'T', fullDayName: 'Thursday', isWeekend: false, weekIndex: 4 },
-  { dateStr: '2026-11-06', dayNumber: '06', dayName: 'F', fullDayName: 'Friday', isWeekend: false, weekIndex: 4 },
-  { dateStr: '2026-11-07', dayNumber: '07', dayName: 'S', fullDayName: 'Saturday', isWeekend: true, weekIndex: 4 },
-  { dateStr: '2026-11-08', dayNumber: '08', dayName: 'S', fullDayName: 'Sunday', isWeekend: true, weekIndex: 4 }
-];
-
-export const INITIAL_STAFF_MEMBERS: StaffMember[] = [
-  // 1. Highlight Profile - Richa Budhathoki (Priority - Exact Transcribed Roster from Hospital Sheet)
-  {
-    id: 'staff-richa-budhathoki',
-    name: 'Richa Budhathoki',
-    role: 'RN',
-    fte: 1.0,
-    section: 'RN',
-    isFavorite: true,
-    notes: 'SPLIT NIGHT',
-    shifts: {
-      // Current active days: Thu Oct 08 just completed Evening; Fri Oct 09 tomorrow is Night
-      '2026-10-08': 'E',
-      '2026-10-09': 'N',
-      '2026-10-10': 'N',
-      '2026-10-11': 'OFF',
-
-      // Official 4-Week Sheet (12th Oct - 8th Nov)
-      '2026-10-12': 'OFF',
-      '2026-10-13': 'E',
-      '2026-10-14': 'E',
-      '2026-10-15': 'OFF',
-      '2026-10-16': 'M',
-      '2026-10-17': 'M',
-      '2026-10-18': 'M',
-
-      '2026-10-19': 'N',
-      '2026-10-20': 'N',
-      '2026-10-21': 'OFF',
-      '2026-10-22': 'OFF',
-      '2026-10-23': 'E',
-      '2026-10-24': 'E',
-      '2026-10-25': 'E',
-
-      '2026-10-26': 'E',
-      '2026-10-27': 'E',
-      '2026-10-28': 'OFF',
-      '2026-10-29': 'E',
-      '2026-10-30': 'ADO',
-      '2026-10-31': 'OFF',
-      '2026-11-01': 'M',
-
-      '2026-11-02': 'M',
-      '2026-11-03': 'N',
-      '2026-11-04': 'OFF',
-      '2026-11-05': 'E',
-      '2026-11-06': 'N',
-      '2026-11-07': 'OFF',
-      '2026-11-08': 'OFF'
-    }
-  },
-
-  // 2. Management
-  {
-    id: 'staff-helen-white',
-    name: 'Helen White',
-    role: 'NUM',
-    fte: 1.0,
-    section: 'Management',
-    shifts: {
-      '2026-10-08': 'D', '2026-10-09': 'D', '2026-10-10': 'OFF', '2026-10-11': 'OFF',
-      '2026-10-12': 'D', '2026-10-13': 'D', '2026-10-14': 'D', '2026-10-15': 'D', '2026-10-16': 'D',
-      '2026-10-19': 'D', '2026-10-20': 'D', '2026-10-21': 'D', '2026-10-22': 'D', '2026-10-23': 'D',
-      '2026-10-26': 'D', '2026-10-27': 'D', '2026-10-28': 'D', '2026-10-29': 'D', '2026-10-30': 'ADO',
-      '2026-11-02': 'D', '2026-11-03': 'D', '2026-11-04': 'D', '2026-11-05': 'D', '2026-11-06': 'D'
-    }
-  },
-  {
-    id: 'staff-kate-wheatley',
-    name: 'Kate Wheatley',
-    role: 'CNE',
-    fte: 1.0,
-    section: 'Management',
-    shifts: {
-      '2026-10-08': 'D', '2026-10-09': 'D',
-      '2026-10-12': 'D', '2026-10-13': 'D', '2026-10-14': 'D', '2026-10-15': 'D', '2026-10-16': 'D',
-      '2026-10-19': 'D', '2026-10-20': 'D', '2026-10-21': 'D', '2026-10-22': 'D', '2026-10-23': 'D',
-      '2026-10-26': 'D', '2026-10-27': 'D', '2026-10-28': 'D', '2026-10-29': 'D', '2026-10-30': 'D',
-      '2026-11-02': 'D', '2026-11-03': 'D', '2026-11-04': 'D', '2026-11-05': 'D', '2026-11-06': 'ADO'
-    }
-  },
-  {
-    id: 'staff-heather-mackrory',
-    name: 'Heather Mackrory',
-    role: 'CareC',
-    fte: 1.0,
-    section: 'Management',
-    shifts: {
-      '2026-10-08': 'D', '2026-10-09': 'ADO',
-      '2026-10-12': 'D', '2026-10-13': 'D', '2026-10-14': 'D', '2026-10-15': 'D', '2026-10-16': 'ADO',
-      '2026-10-19': 'D', '2026-10-20': 'D', '2026-10-21': 'D', '2026-10-22': 'D', '2026-10-23': 'D',
-      '2026-10-26': 'D', '2026-10-27': 'D', '2026-10-28': 'D', '2026-10-29': 'D', '2026-10-30': 'D',
-      '2026-11-02': 'D', '2026-11-03': 'D', '2026-11-04': 'D', '2026-11-05': 'D', '2026-11-06': 'D'
-    }
-  },
-  {
-    id: 'staff-sasi-piksultong',
-    name: 'Sasi Piksultong',
-    role: 'CSO',
-    fte: 1.0,
-    section: 'Management',
-    shifts: {
-      '2026-10-08': 'D', '2026-10-09': 'D',
-      '2026-10-12': 'D', '2026-10-13': 'D', '2026-10-14': 'D', '2026-10-15': 'D', '2026-10-16': 'D',
-      '2026-10-19': 'D', '2026-10-20': 'D', '2026-10-21': 'D', '2026-10-22': 'D', '2026-10-23': 'D',
-      '2026-10-26': 'D', '2026-10-27': 'D', '2026-10-28': 'ADO', '2026-10-29': 'D', '2026-10-30': 'D',
-      '2026-11-02': 'D', '2026-11-03': 'D', '2026-11-04': 'D', '2026-11-05': 'D', '2026-11-06': 'D'
-    }
-  },
-
-  // 3. RN In Charge
-  {
-    id: 'staff-sodanneychow',
-    name: 'Sodanney Chow',
-    role: 'RN',
-    fte: 1.0,
-    section: 'RN In charge',
-    shifts: {
-      '2026-10-08': 'N', '2026-10-09': 'N',
-      '2026-10-14': 'N1', '2026-10-15': 'N', '2026-10-16': 'N', '2026-10-17': 'N',
-      '2026-10-21': 'ADO', '2026-10-22': 'EI', '2026-10-23': 'EI', '2026-10-24': 'EI', '2026-10-25': 'EI',
-      '2026-10-28': 'N1', '2026-10-29': 'N', '2026-10-30': 'N', '2026-10-31': 'N1',
-      '2026-11-04': 'E', '2026-11-05': 'E', '2026-11-06': 'EI', '2026-11-07': 'EI'
-    }
-  },
-  {
-    id: 'staff-barsha-bhattarai',
-    name: 'Barsha Bhattarai',
-    role: 'RN',
-    fte: 1.0,
-    section: 'RN In charge',
-    shifts: {
-      '2026-10-08': 'M', '2026-10-09': 'M',
-      '2026-10-12': 'EI', '2026-10-13': 'EI', '2026-10-14': 'M', '2026-10-15': 'M', '2026-10-16': 'M1',
-      '2026-10-17': 'MI', '2026-10-18': 'E', '2026-10-20': 'ADO', '2026-10-21': 'M', '2026-10-22': 'M',
-      '2026-10-23': 'M', '2026-10-24': 'M', '2026-10-25': 'M', '2026-10-27': 'M', '2026-10-28': 'M',
-      '2026-10-29': 'M', '2026-10-30': 'M', '2026-10-31': 'M', '2026-11-01': 'M', '2026-11-03': 'M',
-      '2026-11-04': 'M', '2026-11-05': 'M', '2026-11-06': 'M', '2026-11-07': 'M', '2026-11-08': 'AL'
-    }
-  },
-  {
-    id: 'staff-chloe-greenwood',
-    name: 'Chloe Greenwood',
-    role: 'RN',
-    fte: 1.0,
-    section: 'RN In charge',
-    shifts: {
-      '2026-10-08': 'M', '2026-10-09': 'D',
-      '2026-10-12': 'M', '2026-10-13': 'D', '2026-10-14': 'MI', '2026-10-15': 'MI', '2026-10-16': 'ADO',
-      '2026-10-20': 'M', '2026-10-21': 'M', '2026-10-22': 'MI', '2026-10-23': 'MI', '2026-10-24': 'M',
-      '2026-10-27': 'MI', '2026-10-28': 'MI', '2026-10-29': 'MI', '2026-10-30': 'MI', '2026-10-31': 'M',
-      '2026-11-03': 'M', '2026-11-04': 'M', '2026-11-05': 'M', '2026-11-06': 'M', '2026-11-07': 'M'
-    }
-  },
-  {
-    id: 'staff-kanchan-khadka',
-    name: 'Kanchan Khadka',
-    role: 'RN',
-    fte: 1.0,
-    section: 'RN In charge',
-    shifts: {
-      '2026-10-08': 'OFF', '2026-10-09': 'OFF',
-      '2026-10-12': 'M', '2026-10-13': 'M', '2026-10-14': 'M', '2026-10-15': 'M', '2026-10-16': 'AL',
-      '2026-10-17': 'AL', '2026-10-18': 'M', '2026-10-19': 'M', '2026-10-20': 'M', '2026-10-21': 'M',
-      '2026-10-28': 'ADO', '2026-10-29': 'MI', '2026-10-30': 'M', '2026-10-31': 'MI',
-      '2026-11-04': 'M', '2026-11-05': 'MI', '2026-11-06': 'M', '2026-11-07': 'M'
-    }
-  },
-  {
-    id: 'staff-pisey-ly',
-    name: 'Pisey Ly',
-    role: 'RN',
-    fte: 1.0,
-    section: 'RN In charge',
-    shifts: {
-      '2026-10-12': 'ADO4', '2026-10-13': 'E', '2026-10-14': 'EI', '2026-10-15': 'EI', '2026-10-16': 'N',
-      '2026-10-17': 'N', '2026-10-19': 'AL', '2026-10-20': 'AL', '2026-10-21': 'M', '2026-10-22': 'M',
-      '2026-10-25': 'AL', '2026-10-26': 'AL', '2026-10-27': 'AL', '2026-10-28': 'AL', '2026-10-29': 'AL',
-      '2026-10-30': 'AL', '2026-11-01': 'AL', '2026-11-02': 'AL', '2026-11-03': 'AL', '2026-11-04': 'AL'
-    }
-  },
-
-  // 4. RN (Staff Nurses)
-  {
-    id: 'staff-nisha-bohara',
-    name: 'Nisha Bohara',
-    role: 'RN',
-    fte: 1.0,
-    section: 'RN',
-    notes: 'SPLIT NIGHT',
-    shifts: {
-      '2026-10-08': 'OFF', '2026-10-09': 'OFF',
-      '2026-10-12': 'E', '2026-10-13': 'E', '2026-10-15': 'M', '2026-10-16': 'M', '2026-10-17': 'M',
-      '2026-10-19': 'E', '2026-10-20': 'E', '2026-10-23': 'E', '2026-10-25': 'E',
-      '2026-10-26': 'E', '2026-10-28': 'E', '2026-10-29': 'E', '2026-10-30': 'E', '2026-10-31': 'E',
-      '2026-11-01': 'N', '2026-11-03': 'E6', '2026-11-04': 'E', '2026-11-06': 'ADO', '2026-11-07': 'M', '2026-11-08': 'M'
-    }
-  },
-  {
-    id: 'staff-anuj-dhakal',
-    name: 'Anuj Dhakal',
-    role: 'RN',
-    fte: 0.8,
-    section: 'RN',
-    shifts: {
-      '2026-10-12': 'E', '2026-10-13': 'E', '2026-10-18': 'E', '2026-10-19': 'E',
-      '2026-10-21': 'E', '2026-10-22': 'E', '2026-10-24': 'E', '2026-10-25': 'E', '2026-10-26': 'E',
-      '2026-10-30': 'N', '2026-10-31': 'N', '2026-11-01': 'N', '2026-11-02': 'N',
-      '2026-11-06': 'N', '2026-11-07': 'N', '2026-11-08': 'N'
-    }
-  },
-  {
-    id: 'staff-alejandro-domingo',
-    name: 'Alejandro Domingo',
-    role: 'RN',
-    fte: 0.6,
-    section: 'RN',
-    shifts: {
-      '2026-10-12': 'N', '2026-10-13': 'N', '2026-10-16': 'M', '2026-10-17': 'M', '2026-10-18': 'M',
-      '2026-10-19': 'M', '2026-10-21': 'M', '2026-10-22': 'E', '2026-10-23': 'E',
-      '2026-10-31': 'M', '2026-11-01': 'M', '2026-11-03': 'M', '2026-11-04': 'E'
-    }
-  },
-  {
-    id: 'staff-sapphyre-frost',
-    name: 'Sapphyre Frost',
-    role: 'RN',
-    fte: 1.0,
-    section: 'RN',
-    shifts: {
-      '2026-10-12': 'E', '2026-10-13': 'E', '2026-10-14': 'E', '2026-10-16': 'M', '2026-10-17': 'M',
-      '2026-10-19': 'E', '2026-10-20': 'E', '2026-10-21': 'E', '2026-10-23': 'N', '2026-10-24': 'N', '2026-10-25': 'N',
-      '2026-10-28': 'M', '2026-10-30': 'E', '2026-10-31': 'E', '2026-11-02': 'E10', '2026-11-03': 'E', '2026-11-04': 'E',
-      '2026-11-06': 'ADO', '2026-11-08': 'E'
-    }
-  },
-  {
-    id: 'staff-sushmita-rana-magar',
-    name: 'Sushmita Rana Magar',
-    role: 'RN',
-    fte: 1.0,
-    section: 'RN',
-    shifts: {
-      '2026-10-08': 'OFF', '2026-10-09': 'OFF',
-      '2026-10-12': 'E', '2026-10-13': 'E', '2026-10-14': 'E', '2026-10-15': 'E', '2026-10-16': 'E',
-      '2026-10-19': 'ADO', '2026-10-20': 'E', '2026-10-21': 'E', '2026-10-22': 'E', '2026-10-23': 'E',
-      '2026-10-26': 'E', '2026-10-27': 'E', '2026-10-28': 'E', '2026-10-29': 'E', '2026-10-30': 'E',
-      '2026-11-02': 'E', '2026-11-03': 'E', '2026-11-04': 'E', '2026-11-05': 'E', '2026-11-06': 'E'
-    }
-  }
-];
+// Official ward rosters, transcribed from the published PDFs and hour-checked
+export const INITIAL_STAFF_MEMBERS: StaffMember[] = OFFICIAL_STAFF;
 
 export const WARD_INFO = {
   hospitalName: "St. Vincent's Public Hospital",
   wardName: '9 North / GSS',
-  periodTitle: '12th October - 8th November 2026',
+  periodTitle: '12th October - 6th December 2026',
   takeDownNotice: 'Ward 9 North Roster',
   totalBeds: 28,
   nurseLeadContact: 'Helen White (NUM) - Ext 4902'

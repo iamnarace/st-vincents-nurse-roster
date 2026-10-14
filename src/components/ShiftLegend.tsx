@@ -12,11 +12,11 @@ export const ShiftLegend: React.FC<ShiftLegendProps> = ({ isOpen, onClose }) => 
   if (!isOpen) return null;
 
   const categories = [
-    { name: 'Morning Shifts', codes: ['M', 'M1', 'MI', 'M10'] as ShiftCode[] },
+    { name: 'Morning Shifts', codes: ['M', 'M1', 'MI', 'M6', 'M10'] as ShiftCode[] },
     { name: 'Evening Shifts', codes: ['E', 'E1', 'EI', 'E6', 'E10'] as ShiftCode[] },
     { name: 'Night Duty Shifts', codes: ['N', 'N1', 'NI'] as ShiftCode[] },
-    { name: 'Management & Study', codes: ['D', 'SD'] as ShiftCode[] },
-    { name: 'Leave & Days Off', codes: ['AL', 'AL6', 'ADO', 'ADO4', 'ADO6', 'ADO10', 'OFF'] as ShiftCode[] }
+    { name: 'Management & Study', codes: ['D', 'SD', 'WO', 'SN', 'AOE'] as ShiftCode[] },
+    { name: 'Leave & Days Off', codes: ['AL', 'AL4', 'AL6', 'AL10', 'SICK', 'ADO', 'ADO4', 'ADO6', 'ADO10', 'OFF'] as ShiftCode[] }
   ];
 
   return (
