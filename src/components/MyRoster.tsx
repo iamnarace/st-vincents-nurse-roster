@@ -4,6 +4,7 @@ import { StaffMember, DayInfo, ShiftCode } from '../types/roster';
 import { SHIFT_DEFINITIONS, ROSTER_DAYS } from '../data/rosterData';
 import { ProgressCard } from './ProgressCard';
 import { HoursCard } from './HoursCard';
+import { buildPeriods, currentPeriodIndex, totalsFor } from '../utils/hours';
 
 interface MyRosterProps {
   staff: StaffMember;
@@ -79,22 +80,20 @@ export const MyRoster: React.FC<MyRosterProps> = ({ staff, onInitiateSwap, onSyn
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [staff, now]);
 
+  // Totals for the current 4-week roster (not the whole 8 weeks)
+  const rosterPeriod = useMemo(() => {
+    const periods = buildPeriods(ROSTER_DAYS, 28);
+    return periods[currentPeriodIndex(periods, now)];
+  }, [now]);
+
   const totals = useMemo(() => {
-    let work = 0,
-      hours = 0,
-      nights = 0;
-    ROSTER_DAYS.filter((d) => d.weekIndex > 0).forEach((d) => {
-      const def = SHIFT_DEFINITIONS[codeOn(d.dateStr)];
-      if (!def) return;
-      if (def.durationHours > 0 && ['Morning', 'Evening', 'Night', 'Day'].includes(def.category)) {
-        work++;
-        hours += def.durationHours;
-        if (def.category === 'Night') nights++;
-      }
-    });
-    return { work, hours, nights };
+    const t = totalsFor(staff, rosterPeriod.days, now, false);
+    const nights = rosterPeriod.days.filter(
+      (d) => SHIFT_DEFINITIONS[codeOn(d.dateStr)]?.category === 'Night'
+    ).length;
+    return { work: t.shifts, hours: t.worked, nights };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [staff]);
+  }, [staff, rosterPeriod, now]);
 
   const days = ROSTER_DAYS.filter((d) => (week === 'all' ? d.weekIndex > 0 || d.dateStr >= todayKey : d.weekIndex === week));
   const dateLabel = (dateStr: string) => {
@@ -148,10 +147,13 @@ export const MyRoster: React.FC<MyRosterProps> = ({ staff, onInitiateSwap, onSyn
             <p className="text-sm text-white/75 mt-1">{hero.sub}</p>
           </div>
         </div>
-        <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+        <p className="mt-5 text-[11px] font-bold uppercase tracking-widest text-white/70">
+          This 4-week roster · {rosterPeriod.label}
+        </p>
+        <div className="mt-2 grid grid-cols-3 gap-2 text-center">
           {[
             ['Shifts', totals.work],
-            ['Hours', totals.hours],
+            ['Hours worked', totals.hours],
             ['Nights', totals.nights],
           ].map(([k, v]) => (
             <div key={k as string} className="rounded-2xl bg-white/20 py-2.5">
