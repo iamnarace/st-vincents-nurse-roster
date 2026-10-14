@@ -42,7 +42,7 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
   onConfirmInstantSwap,
   onSendSwapRequest,
 }) => {
-  const [filterTab, setFilterTab] = useState<'can_do' | 'conflicts' | 'mutual' | 'all'>('can_do');
+  const [filterTab, setFilterTab] = useState<'can_do' | 'conflicts' | 'mutual' | 'leave' | 'all'>('can_do');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -53,10 +53,10 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
     return analyzeSwapEligibility(staff, dayInfo.dateStr, currentShift, allStaff);
   }, [staff, dayInfo.dateStr, currentShift, allStaff]);
 
-  const { totalOff, canDoShift, fatigueConflictCount, mutualDutyCount, candidates } = analysis;
+  const { totalOff, canDoShift, fatigueConflictCount, mutualDutyCount, onLeaveCount, candidates } = analysis;
 
   const currentShiftMeta = SHIFT_DEFINITIONS[currentShift] || SHIFT_DEFINITIONS.OFF;
-  const monthName = dayInfo.dateStr.startsWith('2026-11') ? 'Nov' : 'Oct';
+  const monthName = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(dayInfo.dateStr.slice(5, 7)) - 1];
 
   // Filter candidates based on selected tab
   const filteredCandidates = useMemo(() => {
@@ -67,6 +67,8 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
         return candidates.filter((c) => c.category === 'fatigue_conflict');
       case 'mutual':
         return candidates.filter((c) => c.category === 'mutual_duty');
+      case 'leave':
+        return candidates.filter((c) => c.category === 'on_leave');
       case 'all':
       default:
         return candidates;
@@ -151,7 +153,7 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
               - How many can do shift if swapped
               - How many cannot (turnaround conflict, e.g. night today can't do morning tomorrow)
           */}
-          <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-center">
             <div className="bg-sky-50 border border-sky-200 rounded-2xl p-2">
               <span className="text-[10px] font-bold text-sky-800 uppercase tracking-wider block">
                 Off / ADO Today
@@ -171,6 +173,18 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
               </span>
               <span className="text-[10px] text-emerald-700 font-semibold block">Fully Rested</span>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setFilterTab('leave')}
+              className="bg-violet-50 border border-violet-300 rounded-2xl p-2"
+            >
+              <span className="text-[10px] font-bold text-violet-800 uppercase tracking-wider block">
+                On Leave
+              </span>
+              <span className="text-lg font-black text-violet-950">{onLeaveCount}</span>
+              <span className="text-[10px] text-violet-700 block">Annual / Sick</span>
+            </button>
 
             <div className="bg-rose-50 border border-rose-200 rounded-2xl p-2">
               <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider block">
@@ -222,6 +236,17 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
                 <span>Mutual Swaps ({mutualDutyCount})</span>
               </button>
             )}
+
+            <button
+              onClick={() => setFilterTab('leave')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                filterTab === 'leave'
+                  ? 'bg-violet-600 text-white shadow-2xs'
+                  : 'bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100'
+              }`}
+            >
+              On Leave ({onLeaveCount})
+            </button>
 
             <button
               onClick={() => setFilterTab('all')}
