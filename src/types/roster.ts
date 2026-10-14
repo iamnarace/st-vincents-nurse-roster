@@ -75,7 +75,7 @@ export interface SwapCandidate {
   isEligible: boolean;
   reason: string;
   restHoursOK: boolean;
-  category: 'available_off' | 'fatigue_conflict' | 'mutual_duty' | 'on_leave' | 'same_shift';
+  category: 'available_off' | 'fatigue_conflict' | 'mutual_duty' | 'on_leave' | 'same_shift' | 'not_eligible';
   prevShift?: ShiftCode;
   nextShift?: ShiftCode;
 }

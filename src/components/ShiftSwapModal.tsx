@@ -42,7 +42,7 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
   onConfirmInstantSwap,
   onSendSwapRequest,
 }) => {
-  const [filterTab, setFilterTab] = useState<'can_do' | 'conflicts' | 'mutual' | 'leave' | 'all'>('can_do');
+  const [filterTab, setFilterTab] = useState<'options' | 'can_do' | 'conflicts' | 'mutual' | 'leave' | 'all'>('options');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -61,6 +61,8 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
   // Filter candidates based on selected tab
   const filteredCandidates = useMemo(() => {
     switch (filterTab) {
+      case 'options':
+        return candidates.filter((c) => c.isEligible);
       case 'can_do':
         return candidates.filter((c) => c.category === 'available_off');
       case 'conflicts':
@@ -109,8 +111,8 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 max-w-xl w-full max-h-[94dvh] sm:max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-blue-700 via-sky-700 to-indigo-800 text-white">
           <div className="flex items-center gap-3">
@@ -133,6 +135,7 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
         </div>
 
         {/* Selected Shift Target Info */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <div className="p-4 bg-slate-50 border-b border-slate-200/90 space-y-3">
           <div className="flex items-center justify-between">
             <div>
@@ -200,6 +203,18 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
           {/* Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pt-1">
             <button
+              onClick={() => setFilterTab('options')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1 ${
+                filterTab === 'options'
+                  ? 'bg-fuchsia-600 text-white shadow-2xs'
+                  : 'bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200 hover:bg-fuchsia-100'
+              }`}
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5" />
+              <span>All Options ({canDoShift + mutualDutyCount})</span>
+            </button>
+
+            <button
               onClick={() => setFilterTab('can_do')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1 ${
                 filterTab === 'can_do'
@@ -208,7 +223,7 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Can Do Shift ({canDoShift})</span>
+              <span>Off &amp; Free ({canDoShift})</span>
             </button>
 
             <button
@@ -220,10 +235,10 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
               }`}
             >
               <AlertTriangle className="w-3.5 h-3.5" />
-              <span>Fatigue Conflicts ({fatigueConflictCount})</span>
+              <span>Blocked by Rest Rule ({fatigueConflictCount})</span>
             </button>
 
-            {mutualDutyCount > 0 && (
+            {true && (
               <button
                 onClick={() => setFilterTab('mutual')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-1 ${
@@ -233,7 +248,7 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
                 }`}
               >
                 <ArrowLeftRight className="w-3.5 h-3.5" />
-                <span>Mutual Swaps ({mutualDutyCount})</span>
+                <span>Two-way Trades ({mutualDutyCount})</span>
               </button>
             )}
 
@@ -270,7 +285,7 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
         )}
 
         {/* Candidates List */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-2.5 flex-1 divide-y divide-slate-100">
+        <div className="p-4 sm:p-5 space-y-2.5 divide-y divide-slate-100">
           {filteredCandidates.length === 0 ? (
             <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200">
               <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
@@ -368,6 +383,7 @@ export const ShiftSwapModal: React.FC<ShiftSwapModalProps> = ({
         </div>
 
         {/* Footer */}
+        </div>
         <div className="p-3.5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-4 h-4 text-blue-600" />
