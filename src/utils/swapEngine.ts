@@ -96,7 +96,7 @@ function restCheck(staff: StaffMember, dateStr: string, code: ShiftCode) {
 }
 
 /**
- * Every colleague, classed for one shift:
+ * Every colleague IN THE SAME GRADE, classed for one shift:
  * - available_off: off / ADO that day and rested enough to take it
  * - mutual_duty:   working a different shift; a two-way trade is safe for BOTH people
  * - fatigue_conflict: would break the minimum rest break
@@ -119,8 +119,8 @@ export function analyzeSwapEligibility(
 
   for (const staff of allStaff) {
     if (staff.id === requestingStaff.id) continue;
-    // Management (NUM / CNE / CareC / CSO) are not part of the nursing allocation
-    if (staff.section === 'Management') continue;
+    // Swaps stay within the same grade: RN with RN, EEN with EEN, TSPRN with TSPRN, etc.
+    if (staff.section !== requestingStaff.section) continue;
 
     const cur = (staff.shifts[dateStr] || 'OFF') as ShiftCode;
     const base = {
@@ -144,8 +144,8 @@ export function analyzeSwapEligibility(
       continue;
     }
 
-    // In-charge shifts need an RN, not an EEN / transition / pathways nurse
-    if (needsInCharge && ['EEN', 'Registered Nurse Transition Program (TSPRN)', 'Pathways to Practice RN'].includes(staff.section)) {
+    // In-charge shifts need an RN
+    if (needsInCharge && staff.section !== 'RN') {
       candidates.push({
         ...base,
         isEligible: false,
